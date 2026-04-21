@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // User Profile Rules
+    match /users/{uid} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email']) 
+          && data.uid == request.auth.uid
+          && data.email is string && data.email.size() <= 256;
+      }
+      allow get: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidUser(incoming());
+      allow update: if isOwner(uid) && isValidUser(incoming()) 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'points', 'streak']);
+    }
+
+    // Bill Rules
+    match /bills/{billId} {
+      function isValidBill(data) {
+        return data.keys().hasAll(['userId', 'status'])
+          && data.userId == request.auth.uid
+          && data.status in ['pending', 'analyzed', 'approved', 'paid'];
+      }
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidBill(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid 
+        && isValidBill(incoming())
+        && (
+          // Action: Approve recommendation
+          (existing().status == 'analyzed' && incoming().status == 'approved' && incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+          // Action: Mark as paid (Terminal state lock logic needed)
+          (existing().status == 'approved' && incoming().status == 'paid' && incoming().diff(existing()).affectedKeys().hasOnly(['status']))
+        );
+      allow delete: if false; // Disallow deletion for audit trail
+    }
+
+    // Public Collections
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if false; // System only
+    }
+
+    match /blog/{postId} {
+      allow read: if true;
+      allow write: if false; // System only
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user account information and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "points": { "type": "integer" },
+        "streak": { "type": "integer" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Bill": {
+      "title": "Medical Bill",
+      "description": "Records of uploaded medical bills and analysis results.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "analyzed", "approved", "paid"] },
+        "uploadDate": { "type": "string", "format": "date-time" },
+        "totalAmount": { "type": "number" },
+        "projectedSavings": { "type": "number" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "amount": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["userId", "status"]
+    },
+    "Promotion": {
+      "title": "Findr Friday Promotion",
+      "description": "Weekly local deals and promotions.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "merchant": { "type": "string" },
+        "validUntil": { "type": "string", "format": "date-time" }
+      }
+    },
+    "BlogPost": {
+      "title": "Healthy Habits Blog",
+      "description": "Articles about fitness and healthy habits.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "category": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User's private profile information."
+    },
+    "/bills/{billId}": {
+      "schema": "Bill",
+      "description": "Medical bills submitted for analysis."
+    },
+    "/promotions/{promoId}": {
+      "schema": "Promotion",
+      "description": "Publicly accessible local promotions."
+    },
+    "/blog/{postId}": {
+      "schema": "BlogPost",
+      "description": "Public educational blog content."
+    }
+  }
+}
