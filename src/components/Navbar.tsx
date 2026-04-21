@@ -94,5 +94,6 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
         )}
       </AnimatePresence>
     </>
+    // Deploying to Vercel
   );
 }
