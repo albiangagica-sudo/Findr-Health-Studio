@@ -77,6 +77,8 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
           >
             <NavLink to="/" icon={BookOpen} mobile>Home</NavLink>
             <NavLink to="/how-it-works" icon={Zap} mobile>How it Works</NavLink>
+            <NavLink to="/findr-fridays" icon={Gift} mobile>Findr Fridays</NavLink>
+<NavLink to="/health-tips" icon={BookOpen} mobile>Health Tips</NavLink>
             <button
               onClick={() => { onUploadClick?.(); setIsMenuOpen(false); }}
               className="w-full mt-4 p-4 bg-black text-white rounded-2xl text-lg font-bold flex items-center justify-center gap-3"
