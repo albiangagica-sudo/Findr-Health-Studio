@@ -1,9 +1,9 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import triageImg from '../assets/Triage.jpg';
-import finePrintImg from '../assets/fine_print.jpg';
-import scriptsImg from '../assets/Scripts.jpg';
+const triageImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Triage.jpg';
+const finePrintImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/fine_print.jpg';
+const scriptsImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Scripts.jpg';
 
 export default function HealthBlog() {
   const posts = [
