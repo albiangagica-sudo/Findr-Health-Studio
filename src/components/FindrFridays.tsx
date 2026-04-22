@@ -68,7 +68,7 @@ export default function FindrFridays() {
               className="group"
             >
               <div className="relative aspect-[4/5] overflow-hidden rounded-[3rem] mb-8 bg-gray-50 border border-gray-100">
-                <img src={deal.image} alt={deal.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={deal.image} alt={deal.title} referrerPolicy="no-referrer" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute top-6 left-6">
                   <span className="px-5 py-2 bg-white text-black text-xs font-black rounded-full shadow-2xl">{deal.discount}</span>
                 </div>
