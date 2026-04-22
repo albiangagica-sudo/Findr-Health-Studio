@@ -43,7 +43,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-[5000] px-4 pt-4 md:pt-6">
+      <nav className="fixed top-0 left-0 right-0 z-[5000] px-4 pt-4 md:pt-6 pointer-events-none">
         <div className="max-w-7xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-gray-100 rounded-[2rem] shadow-sm flex items-center justify-between px-6">
           <Link to="/" onClick={() => setIsMenuOpen(false)}>
             <Logo className="h-8 md:h-10 w-auto" />
