@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 export default function HealthBlog() {
   const posts = [
     {
-      title: "The hidden 'Triage' tax you're likely paying.",
+      title: "The hidden Triage tax you're likely paying.",
       excerpt: "Why some insurance companies deny valid claims during the intake process and how to fight it.",
       category: "Billing Secrets",
       readTime: "4 min",
