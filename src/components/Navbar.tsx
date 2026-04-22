@@ -23,7 +23,7 @@ const NavLink = ({ to, children, icon: Icon, mobile = false, active, onClick }: 
       <span>{children}</span>
       {!mobile && active && (
         <motion.span layoutId="nav-pill" className="absolute inset-0 bg-white -z-10 rounded-xl shadow-sm border border-gray-100" transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }} />
-      )}
+      )} 
     </Link>
   );
 };
