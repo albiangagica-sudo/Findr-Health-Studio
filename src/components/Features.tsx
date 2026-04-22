@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { TrendingUp, ShieldCheck, Zap, Sparkles, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import familySavings from '../assets/family_savings.jpg';
+const familySavings = 'https://res.cloudinary.com/dxtisv39w/image/upload/family_savings_deamn2';
 
 export default function Features() {
   return (

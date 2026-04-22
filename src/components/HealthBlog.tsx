@@ -2,9 +2,9 @@ import { motion } from 'motion/react';
 import { ArrowRight, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const triageImg = '/api/image-proxy?id=1muId1JeQwqqBbLIkc1b0yotcz3mqFhj3';
-const finePrintImg = '/api/image-proxy?id=1DF0pWqX8DyyYy-lFjQBiDxd6-8sMGa0X';
-const scriptsImg = '/api/image-proxy?id=1GiLhDCRDdVRFnISm2pfXok6U2goaR80S';
+const triageImg = 'https://res.cloudinary.com/dxtisv39w/image/upload/Triage_zzrwp5';
+const finePrintImg = 'https://res.cloudinary.com/dxtisv39w/image/upload/fine_print_eemk9o';
+const scriptsImg = 'https://res.cloudinary.com/dxtisv39w/image/upload/Scripts_q6y9bl';
 
 export default function HealthBlog() {
   const posts = [
