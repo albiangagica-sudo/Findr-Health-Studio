@@ -1,33 +1,16 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-const triageImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Triage.jpg';
-const finePrintImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/fine_print.jpg';
-const scriptsImg = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Scripts.jpg';
+
+const triageImg = '/api/image-proxy?id=1muId1JeQwqqBbLIkc1b0yotcz3mqFhj3';
+const finePrintImg = '/api/image-proxy?id=1DF0pWqX8DyyYy-lFjQBiDxd6-8sMGa0X';
+const scriptsImg = '/api/image-proxy?id=1GiLhDCRDdVRFnISm2pfXok6U2goaR80S';
 
 export default function HealthBlog() {
   const posts = [
-    {
-      title: "The hidden Triage tax you are likely paying.",
-      excerpt: "Why some insurance companies deny valid claims during the intake process and how to fight it.",
-      category: "Billing Secrets",
-      readTime: "4 min",
-      image: triageImg
-    },
-    {
-      title: "Why your HMO might be denying valid lab work.",
-      excerpt: "Decoding the fine print of your healthcare plan to avoid out-of-pocket lab surprises.",
-      category: "Insurance Guard",
-      readTime: "6 min",
-      image: finePrintImg
-    },
-    {
-      title: "Negotiation scripts for out-of-network labs.",
-      excerpt: "Practical, battle-tested messages you can send to healthcare providers for instant discounts.",
-      category: "Savings Guide",
-      readTime: "5 min",
-      image: scriptsImg
-    }
+    { title: "The hidden Triage tax you are likely paying.", excerpt: "Why some insurance companies deny valid claims during the intake process and how to fight it.", category: "Billing Secrets", readTime: "4 min", image: triageImg },
+    { title: "Why your HMO might be denying valid lab work.", excerpt: "Decoding the fine print of your healthcare plan to avoid out-of-pocket lab surprises.", category: "Insurance Guard", readTime: "6 min", image: finePrintImg },
+    { title: "Negotiation scripts for out-of-network labs.", excerpt: "Practical, battle-tested messages you can send to healthcare providers for instant discounts.", category: "Savings Guide", readTime: "5 min", image: scriptsImg }
   ];
 
   return (
@@ -35,39 +18,23 @@ export default function HealthBlog() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
           <div className="max-w-xl">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 bg-lavender/20 text-lavender-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-6"
-            >
+            <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} className="inline-flex items-center gap-2 px-3 py-1 bg-lavender/20 text-lavender-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
               <Sparkles size={14} /> Knowledge Hub
             </motion.div>
             <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tight leading-[0.9]">
-              Healthy hub. <br />
-              <span className="text-cobalt italic">Expert insights.</span>
+              Healthy hub. <br /><span className="text-cobalt italic">Expert insights.</span>
             </h2>
           </div>
           <Link to="/health-tips" className="flex items-center gap-3 text-sm font-black uppercase tracking-widest hover:gap-6 transition-all group">
             View All Tips <ArrowRight size={20} className="group-hover:translate-x-1" />
           </Link>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {posts.map((post, idx) => (
-            <motion.article
-              key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              whileHover={{ y: -10 }}
-              className="group cursor-pointer"
-            >
+            <motion.article key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }} whileHover={{ y: -10 }} className="group cursor-pointer">
               <div className="relative aspect-[4/5] rounded-[3.5rem] overflow-hidden mb-8 bg-gray-50 border border-gray-100 shadow-xl shadow-black/[0.02]">
                 <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-6 left-6 px-5 py-2 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-black uppercase tracking-widest text-black">
-                  {post.category}
-                </div>
+                <div className="absolute top-6 left-6 px-5 py-2 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-black uppercase tracking-widest text-black">{post.category}</div>
               </div>
               <div className="px-2">
                 <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
