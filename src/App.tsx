@@ -211,7 +211,7 @@ export default function App() {
           </AnimatePresence>
         </main>
   
-        <footer className="pt-32 pb-16 bg-black text-white rounded-t-[5rem]">
+        <footer className="pt-32 pb-16 bg-black text-white rounded-t-[2rem] md:rounded-t-[5rem]">
            <div className="max-w-7xl mx-auto px-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-20 mb-32">
                  <div className="md:col-span-2">
