@@ -54,8 +54,8 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
   );
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[2000] px-4 pt-4 md:pt-6">
-      <div className="max-w-7xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-gray-100 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center justify-between px-5 md:px-6 relative z-[2010]">
+    <nav className="fixed top-0 left-0 right-0 z-[100] px-4 pt-4 md:pt-6">
+      <div className="max-w-7xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-gray-100 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center justify-between px-5 md:px-6 relative z-[101]">
         <LogoComponent onClick={() => setIsMenuOpen(false)} />
         <div className="hidden md:flex items-center gap-4 lg:gap-8">
           <div className="flex items-center gap-2 lg:gap-3 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100">
@@ -92,13 +92,13 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
             </button>
           )}
         </div>
-        <button className="md:hidden w-12 h-12 flex items-center justify-center text-black active:scale-90 transition-transform relative z-[2011] select-none touch-manipulation" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle Menu">
+        <button className="md:hidden w-12 h-12 flex items-center justify-center text-black active:scale-90 transition-transform relative z-[102] select-none touch-manipulation" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle Menu">
           {isMenuOpen ? <X size={28} strokeWidth={2.5} /> : <Menu size={28} strokeWidth={2.5} />}
         </button>
       </div>
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div key="mobile-nav-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[3000] md:hidden">
+          <motion.div key="mobile-nav-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] md:hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMenuOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }} className="absolute bottom-0 left-0 right-0 bg-[#FBFBFE] rounded-t-[3rem] shadow-[0_-20px_80px_rgba(0,0,0,0.4)] flex flex-col max-h-[92vh] overflow-hidden border-t border-white">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-6 shrink-0" />
