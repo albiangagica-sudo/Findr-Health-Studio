@@ -67,7 +67,7 @@ export default function FindrFridays() {
               transition={{ delay: idx * 0.1 }}
               className="group"
             >
-              <div className="relative aspect-[4/5] overflow-hidden rounded-[3rem] mb-8 bg-gray-50 border border-gray-100">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[3rem] mb-8 bg-gray-50 border border-gray-100" style={{transform: 'translateZ(0)'}}>
                 <img src={deal.image} alt={deal.title} referrerPolicy="no-referrer" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute top-6 left-6">
                   <span className="px-5 py-2 bg-white text-black text-xs font-black rounded-full shadow-2xl">{deal.discount}</span>
