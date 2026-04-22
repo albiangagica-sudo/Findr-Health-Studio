@@ -27,50 +27,8 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
         to={to}
         onClick={() => setIsMenuOpen(false)}
         className={cn(
-          mobile
-            ? "flex items-center gap-3 p-4 rounded-xl text-lg font-bold transition-colors"
-            : "text-xs font-black uppercase tracking-widest transition-colors px-4 py-2",
-          active
-            ? "text-blue-600 bg-blue-50/50"
-            : "text-black/60 hover:text-black hover:bg-gray-50"
-        )}
-      >
-cat > ~/Documents/Projects/findr-health/src/components/Navbar.tsx << 'EOF'
-import { useState, useEffect } from 'react';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { LogIn, LogOut, Menu, X, Zap, BookOpen, Upload } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
-import { Logo } from './Logo';
-
-export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const location = useLocation();
-
-  useEffect(() => {
-    const authUnsubscribe = onAuthStateChanged(auth, (user) => setUser(user));
-    return () => authUnsubscribe();
-  }, []);
-
-  const login = () => signInWithPopup(auth, new GoogleAuthProvider());
-  const logout = () => signOut(auth);
-
-  const NavLink = ({ to, children, icon: Icon, mobile = false }: any) => {
-    const active = location.pathname === to;
-    return (
-      <Link
-        to={to}
-        onClick={() => setIsMenuOpen(false)}
-        className={cn(
-          mobile
-            ? "flex items-center gap-3 p-4 rounded-xl text-lg font-bold transition-colors"
-            : "text-xs font-black uppercase tracking-widest transition-colors px-4 py-2",
-          active
-            ? "text-blue-600 bg-blue-50/50"
-            : "text-black/60 hover:text-black hover:bg-gray-50"
+          mobile ? "flex items-center gap-3 p-4 rounded-xl text-lg font-bold transition-colors" : "text-xs font-black uppercase tracking-widest transition-colors px-4 py-2",
+          active ? "text-blue-600 bg-blue-50/50" : "text-black/60 hover:text-black hover:bg-gray-50"
         )}
       >
         {Icon && <Icon size={mobile ? 24 : 14} />}
@@ -89,10 +47,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
           <div className="hidden md:flex items-center gap-2">
             <NavLink to="/" icon={BookOpen}>Home</NavLink>
             <NavLink to="/how-it-works" icon={Zap}>How it Works</NavLink>
-            <button
-              onClick={onUploadClick}
-              className="px-6 py-2 bg-[#aaff00] text-black rounded-full text-xs font-black uppercase tracking-widest hover:bg-[#99ee00] transition-colors"
-            >
+            <button onClick={onUploadClick} className="px-6 py-2 bg-[#aaff00] text-black rounded-full text-xs font-black uppercase tracking-widest hover:bg-[#99ee00] transition-colors">
               Audit a Bill
             </button>
             {user ? (
