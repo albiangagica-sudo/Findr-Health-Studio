@@ -1,9 +1,9 @@
 import { motion } from 'motion/react';
 import { Gift, MapPin, Star, ArrowRight, Sparkles, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
-const familyYoga = 'https://res.cloudinary.com/dxtisv39w/image/upload/f_auto,q_auto/family_yoga_kdos63';
-const mealKit = 'https://res.cloudinary.com/dxtisv39w/image/upload/f_auto,q_auto/Meal_kit_djirru';
-const vet = 'https://res.cloudinary.com/dxtisv39w/image/upload/f_auto,q_auto/Vet_pzkzrm';
+const familyYoga = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/family_yoga.jpg';
+const mealKit = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Meal_kit.jpg';
+const vet = 'https://raw.githubusercontent.com/albiangagica-sudo/Findr-Health-Studio/main/src/assets/Vet.jpg';
 
 export default function FindrFridays() {
   const deals = [
