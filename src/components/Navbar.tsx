@@ -191,7 +191,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+
         )}
       </AnimatePresence>
     </>
