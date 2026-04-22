@@ -73,7 +73,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[4999] bg-white md:hidden flex flex-col pt-32 px-8 gap-4"
+            className="fixed inset-0 z-[6000] bg-white md:hidden flex flex-col pt-32 px-8 gap-4"
           >
             <NavLink to="/" icon={BookOpen} mobile>Home</NavLink>
             <NavLink to="/how-it-works" icon={Zap} mobile>How it Works</NavLink>
