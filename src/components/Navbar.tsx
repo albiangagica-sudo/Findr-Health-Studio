@@ -98,7 +98,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
       </div>
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div key="mobile-nav-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[2005] md:hidden">
+          <motion.div key="mobile-nav-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[3000] md:hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMenuOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }} className="absolute bottom-0 left-0 right-0 bg-[#FBFBFE] rounded-t-[3rem] shadow-[0_-20px_80px_rgba(0,0,0,0.4)] flex flex-col max-h-[92vh] overflow-hidden border-t border-white">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-6 shrink-0" />
