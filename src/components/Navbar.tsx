@@ -189,8 +189,8 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
                     <MobileLegalLink icon={Lock}>Privacy</MobileLegalLink>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+             </motion.div>
+     
 
         )}
       </AnimatePresence>
