@@ -54,57 +54,88 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
   );
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] px-4 pt-4 md:pt-6">
-      <div className="max-w-7xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-gray-100 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center justify-between px-5 md:px-6 relative z-[101]">
-        <LogoComponent onClick={() => setIsMenuOpen(false)} />
-        <div className="hidden md:flex items-center gap-4 lg:gap-8">
-          <div className="flex items-center gap-2 lg:gap-3 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100">
-            <NavLink to="/" icon={Home} active={location.pathname === '/'}>Home</NavLink>
-            <NavLink to="/how-it-works" icon={Zap} active={location.pathname === '/how-it-works'}>How it Works</NavLink>
-          </div>
-          <button onClick={onUploadClick} className="px-6 h-11 bg-zest text-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-lg shadow-zest/10 active:scale-95 flex items-center justify-center gap-2">
-            <Upload size={14} /> Audit a bill
-          </button>
-          {user ? (
-            <div className="flex items-center gap-4 border-l border-gray-100 pl-4 ml-2">
-              <div className="flex items-center gap-3 pr-2 border-r border-gray-100">
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Level 4</span>
-                  <span className="text-[10px] font-bold text-black leading-none mt-0.5">Legendary</span>
-                </div>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-black border border-black/5" style={{ backgroundColor: '#fcea01' }}>
-                  <Crown size={16} />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-findr-light rounded-full border border-findr/20">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || ''} className="w-6 h-6 rounded-full ring-2 ring-white" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-findr flex items-center justify-center text-white"><User size={12} /></div>
-                )}
-                <span className="text-xs font-bold text-findr-dark">{user.displayName?.split(' ')[0]}</span>
-              </div>
-              <button onClick={logout} className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-full transition-all active:scale-95"><LogOut size={18} /></button>
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 md:pt-6">
+        <div className="max-w-7xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-gray-100 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center justify-between px-5 md:px-6">
+          <LogoComponent onClick={() => setIsMenuOpen(false)} />
+          <div className="hidden md:flex items-center gap-4 lg:gap-8">
+            <div className="flex items-center gap-2 lg:gap-3 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100">
+              <NavLink to="/" icon={Home} active={location.pathname === '/'}>Home</NavLink>
+              <NavLink to="/how-it-works" icon={Zap} active={location.pathname === '/how-it-works'}>How it Works</NavLink>
             </div>
-          ) : (
-            <button onClick={login} className="px-8 h-11 bg-black text-white rounded-2xl text-sm font-black hover:bg-cobalt transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center">
-              Login / Sign up
+            <button onClick={onUploadClick} className="px-6 h-11 bg-zest text-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-lg shadow-zest/10 active:scale-95 flex items-center justify-center gap-2">
+              <Upload size={14} /> Audit a bill
             </button>
-          )}
+            {user ? (
+              <div className="flex items-center gap-4 border-l border-gray-100 pl-4 ml-2">
+                <div className="flex items-center gap-3 pr-2 border-r border-gray-100">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Level 4</span>
+                    <span className="text-[10px] font-bold text-black leading-none mt-0.5">Legendary</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-black border border-black/5" style={{ backgroundColor: '#fcea01' }}>
+                    <Crown size={16} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-findr-light rounded-full border border-findr/20">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || ''} className="w-6 h-6 rounded-full ring-2 ring-white" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-findr flex items-center justify-center text-white"><User size={12} /></div>
+                  )}
+                  <span className="text-xs font-bold text-findr-dark">{user.displayName?.split(' ')[0]}</span>
+                </div>
+                <button onClick={logout} className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-full transition-all active:scale-95"><LogOut size={18} /></button>
+              </div>
+            ) : (
+              <button onClick={login} className="px-8 h-11 bg-black text-white rounded-2xl text-sm font-black hover:bg-cobalt transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/10 flex items-center justify-center">
+                Login / Sign up
+              </button>
+            )}
+          </div>
+          <button
+            className="md:hidden w-12 h-12 flex items-center justify-center text-black active:scale-90 transition-transform select-none touch-manipulation"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isMenuOpen ? <X size={28} strokeWidth={2.5} /> : <Menu size={28} strokeWidth={2.5} />}
+          </button>
         </div>
-        <button className="md:hidden w-12 h-12 flex items-center justify-center text-black active:scale-90 transition-transform relative z-[102] select-none touch-manipulation" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle Menu">
-          {isMenuOpen ? <X size={28} strokeWidth={2.5} /> : <Menu size={28} strokeWidth={2.5} />}
-        </button>
-      </div>
+      </nav>
+
+      {/* Mobile Menu - outside nav, at root level */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div key="mobile-nav-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] md:hidden">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMenuOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }} className="absolute bottom-0 left-0 right-0 bg-[#FBFBFE] rounded-t-[3rem] shadow-[0_-20px_80px_rgba(0,0,0,0.4)] flex flex-col max-h-[92vh] overflow-hidden border-t border-white">
+          <motion.div
+            key="mobile-nav-root"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] md:hidden"
+            style={{ touchAction: 'none' }}
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
+              className="absolute bottom-0 left-0 right-0 bg-[#FBFBFE] rounded-t-[3rem] shadow-[0_-20px_80px_rgba(0,0,0,0.4)] flex flex-col max-h-[92vh] overflow-hidden border-t border-white"
+              style={{ touchAction: 'pan-y' }}
+            >
               <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-6 shrink-0" />
               <div className="flex-1 overflow-y-auto px-8 pb-12 pt-4 overscroll-contain">
                 <div className="flex flex-col gap-8">
-                  <button onClick={() => { onUploadClick?.(); setIsMenuOpen(false); }} className="w-full py-6 bg-zest text-black rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl shadow-zest/20 active:scale-95 transition-all">
+                  <button
+                    onClick={() => { onUploadClick?.(); setIsMenuOpen(false); }}
+                    className="w-full py-6 bg-zest text-black rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl shadow-zest/20 active:scale-95 transition-all touch-manipulation"
+                  >
                     <Upload size={20} /> Audit a bill
                   </button>
                   <div className="flex flex-col gap-2">
@@ -114,13 +145,22 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
                     <NavLink to="/findr-fridays" icon={Gift} mobile active={location.pathname === '/findr-fridays'} onClick={() => setIsMenuOpen(false)}>Findr Fridays</NavLink>
                     <NavLink to="/health-tips" icon={BookOpen} mobile active={location.pathname === '/health-tips'} onClick={() => setIsMenuOpen(false)}>Health Tips</NavLink>
                     <NavLink to="/enterprise" icon={Crown} mobile active={location.pathname === '/enterprise'} onClick={() => setIsMenuOpen(false)}>Enterprise</NavLink>
-                    <a href="mailto:contact@findrhealth.com" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold py-4 px-5 text-black/60 hover:text-black transition-colors uppercase tracking-tight flex items-center gap-4 rounded-2xl hover:bg-gray-100">
+                    
+                      href="mailto:contact@findrhealth.com"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-lg font-bold py-4 px-5 text-black/60 hover:text-black transition-colors uppercase tracking-tight flex items-center gap-4 rounded-2xl hover:bg-gray-100 touch-manipulation"
+                    >
                       <Mail size={24} className="text-gray-400" /><span>Contact Support</span>
                     </a>
                   </div>
                   <div className="pt-8 border-t border-gray-200">
                     {!user ? (
-                      <button onClick={() => { login(); setIsMenuOpen(false); }} className="w-full py-6 bg-black text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Login / Sign up</button>
+                      <button
+                        onClick={() => { login(); setIsMenuOpen(false); }}
+                        className="w-full py-6 bg-black text-white rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all touch-manipulation"
+                      >
+                        Login / Sign up
+                      </button>
                     ) : (
                       <div className="flex flex-col gap-6">
                         <div className="flex items-center gap-5 px-6 py-4 bg-gray-100 rounded-[2.5rem] border border-gray-200">
@@ -134,7 +174,10 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
                             <p className="text-xs text-findr font-black uppercase tracking-widest mt-1">Premium Member</p>
                           </div>
                         </div>
-                        <button onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full py-6 text-red-500 bg-red-100/50 hover:bg-red-100 rounded-[2rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-colors active:scale-95 shadow-sm">
+                        <button
+                          onClick={() => { logout(); setIsMenuOpen(false); }}
+                          className="w-full py-6 text-red-500 bg-red-100/50 hover:bg-red-100 rounded-[2rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-colors active:scale-95 shadow-sm touch-manipulation"
+                        >
                           <LogOut size={20} /> Logout Account
                         </button>
                       </div>
@@ -151,6 +194,6 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }
