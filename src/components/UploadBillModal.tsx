@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download } from 'lucide-react';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -40,6 +40,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -136,6 +137,73 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setTimeout(() => setCopied(false), 2000);
   };
 
+  useEffect(() => {
+    if (status === 'details') {
+      contentRef.current?.scrollTo(0, 0);
+    }
+  }, [status]);
+
+  const handleDownloadReport = () => {
+    const provider = analysisResult?.provider;
+    const lines: string[] = [
+      'FINDR HEALTH — DOCUMENT ANALYSIS REPORT',
+      '='.repeat(50),
+      '',
+      'PROVIDER',
+      `Name: ${provider?.providerName || 'Unknown'}`,
+      `Document Type: ${documentTypeLabel}`,
+      provider?.serviceDate ? `Service Date: ${new Date(provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : '',
+      provider?.verdictMessage ? `Verdict: ${provider.verdictMessage}` : '',
+      '',
+      'SUMMARY',
+      `Total Billed: ${formatMoney(analysisResult?.totalBilled)}`,
+      `Fair Market Value: ${formatMoney(provider?.totalEstimatedFair)}`,
+      `Your Responsibility: ${formatMoney(provider?.patientResponsibility)}`,
+      `Potential Savings: ${formatMoney(potentialSavings)}`,
+      '',
+    ];
+
+    if (analysisResult?.lineItems?.length) {
+      lines.push('CHARGES BREAKDOWN', '-'.repeat(40));
+      analysisResult.lineItems.forEach((item: any, i: number) => {
+        const assessment = ASSESSMENT_STYLES[item.analysis?.assessment]?.label || item.analysis?.assessment || '';
+        lines.push(
+          `\n${i + 1}. ${item.description}${item.cptCode ? ` (${item.cptCode})` : ''}`,
+          `   Billed: ${formatMoney(item.billedAmount)}`,
+          `   Fair Range: ${formatMoney(item.referencePricing?.fairPriceRange?.low)} — ${formatMoney(item.referencePricing?.fairPriceRange?.high)}`,
+          `   Assessment: ${assessment}`,
+          item.analysis?.reasoning ? `   Reasoning: ${item.analysis.reasoning}` : '',
+        );
+      });
+      lines.push('');
+    }
+
+    if (analysisResult?.explanation) {
+      lines.push('WHAT THIS MEANS', '-'.repeat(40), analysisResult.explanation, '');
+    }
+
+    if (analysisResult?.callScript) {
+      lines.push('CALL SCRIPT', '-'.repeat(40), analysisResult.callScript, '');
+    }
+
+    if (analysisResult?.negotiationScript) {
+      lines.push('NEGOTIATION SCRIPT', '-'.repeat(40), analysisResult.negotiationScript, '');
+    }
+
+    const text = lines.filter(Boolean).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const sanitizedName = (provider?.providerName || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_');
+    const date = new Date().toISOString().split('T')[0];
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Findr_Analysis_${sanitizedName}_${date}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const overchargedItems = (analysisResult?.lineItems || []).filter(
     (item: any) => item.analysis?.assessment !== 'fair' && item.billedAmount > (item.referencePricing?.fairPriceRange?.high || 0)
   );
@@ -163,7 +231,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className={`w-full bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto ${status === 'details' ? 'max-w-2xl max-h-[90vh] flex flex-col' : 'max-w-xl'}`}
+              className={`w-full bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col ${status === 'details' ? 'max-w-2xl' : 'max-w-xl'}`}
             >
               {/* Header */}
               <div className="p-8 border-b border-gray-50 flex items-center justify-between shrink-0">
@@ -182,7 +250,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               </div>
 
               {/* Content */}
-              <div className={`p-10 ${status === 'details' ? 'overflow-y-auto' : ''}`}>
+              <div ref={contentRef} className="p-10 overflow-y-auto">
                 {status === 'idle' && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
@@ -409,13 +477,21 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                         </div>
                       </div>
                     )}
+
+                    {/* Download Report */}
+                    <button
+                      onClick={handleDownloadReport}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group"
+                    >
+                      <Download size={20} /> Download Report
+                    </button>
                   </div>
                 )}
               </div>
 
               {/* Footer Actions */}
               {status === 'idle' && (
-                <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex flex-col py-6">
+                <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex flex-col py-6 shrink-0">
                   <button
                     disabled={!file}
                     onClick={() => startAnalysis()}
