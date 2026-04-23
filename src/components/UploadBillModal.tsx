@@ -145,63 +145,146 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
   const handleDownloadReport = () => {
     const provider = analysisResult?.provider;
-    const lines: string[] = [
-      'FINDR HEALTH — DOCUMENT ANALYSIS REPORT',
-      '='.repeat(50),
-      '',
-      'PROVIDER',
-      `Name: ${provider?.providerName || 'Unknown'}`,
-      `Document Type: ${documentTypeLabel}`,
-      provider?.serviceDate ? `Service Date: ${new Date(provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : '',
-      provider?.verdictMessage ? `Verdict: ${provider.verdictMessage}` : '',
-      '',
-      'SUMMARY',
-      `Total Billed: ${formatMoney(analysisResult?.totalBilled)}`,
-      `Fair Market Value: ${formatMoney(provider?.totalEstimatedFair)}`,
-      `Your Responsibility: ${formatMoney(provider?.patientResponsibility)}`,
-      `Potential Savings: ${formatMoney(potentialSavings)}`,
-      '',
-    ];
+    const providerName = provider?.providerName || 'Unknown Provider';
+    const serviceDate = provider?.serviceDate
+      ? new Date(provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '';
+    const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    if (analysisResult?.lineItems?.length) {
-      lines.push('CHARGES BREAKDOWN', '-'.repeat(40));
-      analysisResult.lineItems.forEach((item: any, i: number) => {
-        const assessment = ASSESSMENT_STYLES[item.analysis?.assessment]?.label || item.analysis?.assessment || '';
-        lines.push(
-          `\n${i + 1}. ${item.description}${item.cptCode ? ` (${item.cptCode})` : ''}`,
-          `   Billed: ${formatMoney(item.billedAmount)}`,
-          `   Fair Range: ${formatMoney(item.referencePricing?.fairPriceRange?.low)} — ${formatMoney(item.referencePricing?.fairPriceRange?.high)}`,
-          `   Assessment: ${assessment}`,
-          item.analysis?.reasoning ? `   Reasoning: ${item.analysis.reasoning}` : '',
-        );
-      });
-      lines.push('');
+    const assessmentColor = (assessment: string) => {
+      switch (assessment) {
+        case 'fair': return '#16a34a';
+        case 'high': return '#d97706';
+        case 'very_high': return '#ea580c';
+        case 'extreme': return '#dc2626';
+        default: return '#6b7280';
+      }
+    };
+
+    const lineItemRows = (analysisResult?.lineItems || []).map((item: any, i: number) => {
+      const style = ASSESSMENT_STYLES[item.analysis?.assessment] || ASSESSMENT_STYLES.fair;
+      const color = assessmentColor(item.analysis?.assessment);
+      return `
+        <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">
+            ${item.description}
+            ${item.analysis?.reasoning ? `<br><span style="color: #9ca3af; font-size: 11px;">${item.analysis.reasoning}</span>` : ''}
+          </td>
+          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: center; color: #6b7280;">${item.cptCode || '—'}</td>
+          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; font-weight: 600;">${formatMoney(item.billedAmount)}</td>
+          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; color: #6b7280;">${formatMoney(item.referencePricing?.fairPriceRange?.low)} — ${formatMoney(item.referencePricing?.fairPriceRange?.high)}</td>
+          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: center;">
+            <span style="display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; color: ${color}; background: ${color}15;">${style.label}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Findr Analysis - ${providerName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="background: #1a1a2e; color: white; padding: 40px 48px;">
+    <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Findr Health</div>
+    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-top: 4px;">Document Analysis Report</div>
+  </div>
+
+  <div style="padding: 40px 48px;">
+    <!-- Provider Info -->
+    <div style="margin-bottom: 32px;">
+      <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">${providerName}</div>
+      <div style="font-size: 14px; color: #6b7280;">${documentTypeLabel}${serviceDate ? ` &middot; ${serviceDate}` : ''}</div>
+    </div>
+
+    ${provider?.verdictMessage ? `
+    <div style="padding: 16px 20px; border-radius: 12px; margin-bottom: 32px; font-size: 14px; font-weight: 600; ${isOvercharged ? 'background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;' : 'background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;'}">
+      ${provider.verdictMessage}
+    </div>` : ''}
+
+    <!-- Summary -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 36px;">
+      <tr>
+        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px 0 0 8px;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Total Billed</div>
+          <div style="font-size: 22px; font-weight: 700;">${formatMoney(analysisResult?.totalBilled)}</div>
+        </td>
+        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Fair Market</div>
+          <div style="font-size: 22px; font-weight: 700;">${formatMoney(provider?.totalEstimatedFair)}</div>
+        </td>
+        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Your Responsibility</div>
+          <div style="font-size: 22px; font-weight: 700;">${formatMoney(provider?.patientResponsibility)}</div>
+        </td>
+        <td style="width: 25%; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0 8px 8px 0;">
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #16a34a; font-weight: 700; margin-bottom: 6px;">Potential Savings</div>
+          <div style="font-size: 22px; font-weight: 700; color: #16a34a;">${formatMoney(potentialSavings)}</div>
+        </td>
+      </tr>
+    </table>
+
+    ${analysisResult?.lineItems?.length ? `
+    <!-- Charges Breakdown -->
+    <div style="margin-bottom: 36px;">
+      <div style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Charges Breakdown</div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+        <thead>
+          <tr style="background: #f3f4f6;">
+            <th style="padding: 10px 16px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Service</th>
+            <th style="padding: 10px 16px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">CPT</th>
+            <th style="padding: 10px 16px; text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Billed</th>
+            <th style="padding: 10px 16px; text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Fair Range</th>
+            <th style="padding: 10px 16px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Assessment</th>
+          </tr>
+        </thead>
+        <tbody>${lineItemRows}</tbody>
+      </table>
+    </div>` : ''}
+
+    ${analysisResult?.explanation ? `
+    <!-- Explanation -->
+    <div style="margin-bottom: 36px;">
+      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">What This Means</div>
+      <div style="font-size: 14px; color: #374151; line-height: 1.7; padding: 20px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">${analysisResult.explanation}</div>
+    </div>` : ''}
+
+    ${analysisResult?.callScript ? `
+    <!-- Call Script -->
+    <div style="margin-bottom: 36px;">
+      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">What To Say When You Call</div>
+      <div style="font-size: 13px; color: #374151; line-height: 1.7; padding: 20px; background: #fffbeb; border-radius: 12px; border: 1px solid #fde68a; white-space: pre-wrap;">${analysisResult.callScript}</div>
+    </div>` : ''}
+
+    ${analysisResult?.negotiationScript ? `
+    <!-- Negotiation Script -->
+    <div style="margin-bottom: 36px;">
+      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Negotiation Script</div>
+      <div style="font-size: 13px; color: #374151; line-height: 1.7; padding: 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; white-space: pre-wrap;">${analysisResult.negotiationScript}</div>
+    </div>` : ''}
+  </div>
+
+  <!-- Footer -->
+  <div style="padding: 24px 48px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 11px; display: flex; justify-content: space-between;">
+    <span>Generated by Findr Health &mdash; findrhealth.com</span>
+    <span>${generatedDate}</span>
+  </div>
+</body>
+</html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => printWindow.print();
     }
-
-    if (analysisResult?.explanation) {
-      lines.push('WHAT THIS MEANS', '-'.repeat(40), analysisResult.explanation, '');
-    }
-
-    if (analysisResult?.callScript) {
-      lines.push('CALL SCRIPT', '-'.repeat(40), analysisResult.callScript, '');
-    }
-
-    if (analysisResult?.negotiationScript) {
-      lines.push('NEGOTIATION SCRIPT', '-'.repeat(40), analysisResult.negotiationScript, '');
-    }
-
-    const text = lines.filter(Boolean).join('\n');
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const sanitizedName = (provider?.providerName || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_');
-    const date = new Date().toISOString().split('T')[0];
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Findr_Analysis_${sanitizedName}_${date}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const overchargedItems = (analysisResult?.lineItems || []).filter(
@@ -479,12 +562,15 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                     )}
 
                     {/* Download Report */}
-                    <button
-                      onClick={handleDownloadReport}
-                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group"
-                    >
-                      <Download size={20} /> Download Report
-                    </button>
+                    <div>
+                      <button
+                        onClick={handleDownloadReport}
+                        className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group"
+                      >
+                        <Download size={20} /> Download Report
+                      </button>
+                      <p className="text-[10px] text-center text-gray-400 font-bold uppercase tracking-widest mt-3">Opens print dialog — select "Save as PDF"</p>
+                    </div>
                   </div>
                 )}
               </div>
