@@ -34,16 +34,6 @@ export default function BillAnalysis() {
                 Bills, denial letters, insurance forms, confusing statements — drop it in and we'll tell you what it means and what to do next.
              </p>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-8 bg-white rounded-[2.5rem] border border-gray-100 flex flex-col justify-between shadow-sm">
-                <p className="text-4xl font-display font-bold text-black mb-4">98%</p>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Accuracy Rate</p>
-              </div>
-              <div className="p-8 bg-white rounded-[2.5rem] border border-gray-100 flex flex-col justify-between shadow-sm">
-                <p className="text-4xl font-display font-bold text-black mb-4">45s</p>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Avg Analysis Time</p>
-              </div>
-            </div>
           </div>
 
           <div className="lg:w-1/2 w-full">
