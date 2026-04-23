@@ -57,8 +57,8 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
               {/* Header */}
               <div className="p-8 border-b border-gray-50 flex items-center justify-between">
                 <div>
-                   <h2 className="text-2xl font-display font-bold">Audit Medical Bill</h2>
-                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">AI Audit Engine v2.4</p>
+                   <h2 className="text-2xl font-display font-bold">Analyze Your Document</h2>
+                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">Findr Document Intelligence</p>
                 </div>
                 <button 
                   onClick={handleClose}
@@ -87,7 +87,7 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                     </div>
                     <div className="text-center">
                        <p className="text-lg font-bold mb-1">
-                         {file ? file.name : "Choose a file or drag it here"}
+                         {file ? file.name : "Choose a file or drag it here — bills, EOBs, denial letters, statements"}
                        </p>
                        <p className="text-sm text-gray-400 font-medium tracking-tight">Supports PDF, JPG, PNG (Max 10MB)</p>
                     </div>
@@ -108,10 +108,10 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                        </div>
                     </div>
                     <h3 className="text-2xl font-display font-bold mb-3">
-                      {status === 'uploading' ? "Uploading to secure cloud..." : "AI Intelligence Analyzing..."}
+                      {status === 'uploading' ? "Uploading securely..." : "Reading your document..."}
                     </h3>
                     <p className="text-gray-500 font-medium max-w-xs mx-auto">
-                      We're scanning codes and cross-referencing against insurance fair-pay databases.
+                      We're identifying what type of document this is, extracting the details, and figuring out what it means for you.
                     </p>
                   </div>
                 )}
@@ -128,16 +128,16 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                     <h3 className="text-3xl font-display font-bold mb-4 tracking-tight">Analysis Complete!</h3>
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-8 w-full text-left">
                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Potential Errors</span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">What We Found</span>
                           <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[9px] font-black uppercase">3 Found</span>
                        </div>
                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold">Estimated Savings</span>
+                          <span className="text-lg font-bold">Potential Savings</span>
                           <span className="text-3xl font-display font-bold text-findr">$424.15</span>
                        </div>
                     </div>
-                    <button className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
-                       View Detailed Audit <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                    <button onClick={() => console.log('View full analysis clicked')} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
+                       View Full Analysis <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                     </button>
                   </div>
                 )}
