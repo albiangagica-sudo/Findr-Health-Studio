@@ -226,12 +226,12 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
             onClick={handleClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200]"
           />
-          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pt-24 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className={`w-full bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col ${status === 'details' ? 'max-w-2xl' : 'max-w-xl'}`}
+              className={`w-full bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto max-h-[85vh] flex flex-col ${status === 'details' ? 'max-w-2xl' : 'max-w-xl'}`}
             >
               {/* Header */}
               <div className="p-8 border-b border-gray-50 flex items-center justify-between shrink-0">
@@ -316,13 +316,13 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                 )}
 
                 {status === 'success' && (
-                  <div className="py-12 flex flex-col items-center text-center">
+                  <div className="py-6 flex flex-col items-center text-center">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="w-24 h-24 bg-zest rounded-full flex items-center justify-center text-black mb-10 shadow-xl shadow-zest/20"
+                      className="w-16 h-16 bg-zest rounded-full flex items-center justify-center text-black mb-6 shadow-xl shadow-zest/20"
                     >
-                       <CheckCircle2 size={48} />
+                       <CheckCircle2 size={32} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis Complete!</h3>
                     {analysisResult?.provider?.providerName && (
