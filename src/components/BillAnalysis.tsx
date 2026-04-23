@@ -28,14 +28,14 @@ export default function BillAnalysis() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#e9ff5a] text-black rounded-full text-[10px] font-black uppercase tracking-widest mb-8 shadow-sm"
              >
-                <Activity size={14} className="text-black" /> Precision Engine
+                <Activity size={14} className="text-black" /> Document Intelligence
              </motion.div>
              <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tight leading-[0.9] mb-8">
-                Your <span className="text-cobalt">Savings</span> <br />
-                Machine.
+                Upload it. <br />
+                We'll <span className="text-cobalt">explain it</span>.
              </h2>
              <p className="text-xl text-gray-500 font-medium mb-12 max-w-md leading-relaxed">
-                Toss your bills into our engine. We'll strip back the jargon and find the money you're owed.
+                Bills, denial letters, insurance forms, confusing statements — drop it in and we'll tell you what it means and what to do next.
              </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -71,8 +71,8 @@ export default function BillAnalysis() {
                         >
                            <Upload size={48} className="group-hover:animate-bounce" />
                         </div>
-                        <h3 className="text-3xl font-display font-bold mb-4 tracking-tight">Drop the bill.</h3>
-                        <p className="text-gray-400 font-medium mb-12 max-w-xs uppercase tracking-widest text-[10px] leading-relaxed">Any medical statement, invoice, or EOB <br /> (PDF or Image)</p>
+                        <h3 className="text-3xl font-display font-bold mb-4 tracking-tight">Drop your document.</h3>
+                        <p className="text-gray-400 font-medium mb-12 max-w-xs uppercase tracking-widest text-[10px] leading-relaxed">Bills, EOBs, denial letters, statements, or any medical document <br /> (PDF or Image)</p>
                         <button 
                           onClick={() => fileInputRef.current?.click()}
                           className="group px-12 py-6 bg-black text-white rounded-[2rem] font-black text-xl shadow-xl hover:bg-cobalt transition-all flex items-center gap-3 active:scale-95"
