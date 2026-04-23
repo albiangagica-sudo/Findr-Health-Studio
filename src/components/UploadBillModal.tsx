@@ -1,10 +1,14 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, Loader2, Zap } from 'lucide-react';
+import { auth } from '../lib/firebase';
+
+const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
 export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error'>('idle');
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,19 +20,72 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
   const startAnalysis = async () => {
     if (!file) return;
     setStatus('uploading');
-    
-    // Simulate upload
-    await new Promise(r => setTimeout(r, 1500));
-    setStatus('analyzing');
-    
-    // Simulate AI analysis
-    await new Promise(r => setTimeout(r, 2500));
-    setStatus('success');
+
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const headers: Record<string, string> = token
+        ? { 'Authorization': `Bearer ${token}` }
+        : { 'x-user-id': 'anonymous' };
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const uploadRes = await fetch(`${API_BASE}/analyze`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed with status ${uploadRes.status}`);
+      }
+
+      const { billId } = await uploadRes.json();
+      setStatus('analyzing');
+
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          clearInterval(interval);
+          reject(new Error('Analysis timed out after 3 minutes'));
+        }, 3 * 60 * 1000);
+
+        const interval = setInterval(async () => {
+          try {
+            const pollRes = await fetch(`${API_BASE}/bills/${billId}`, { headers });
+
+            if (!pollRes.ok) {
+              throw new Error(`Poll failed with status ${pollRes.status}`);
+            }
+
+            const data = await pollRes.json();
+
+            if (data.status === 'completed') {
+              clearInterval(interval);
+              clearTimeout(timeout);
+              setAnalysisResult(data);
+              setStatus('success');
+              resolve();
+            } else if (data.status === 'failed') {
+              clearInterval(interval);
+              clearTimeout(timeout);
+              reject(new Error('Analysis failed'));
+            }
+          } catch (err) {
+            clearInterval(interval);
+            clearTimeout(timeout);
+            reject(err);
+          }
+        }, 3000);
+      });
+    } catch {
+      setStatus('error');
+    }
   };
 
   const reset = () => {
     setFile(null);
     setStatus('idle');
+    setAnalysisResult(null);
   };
 
   const handleClose = () => {
@@ -36,11 +93,18 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
     setTimeout(reset, 300); // Reset after animation
   };
 
+  const overchargedItems = analysisResult?.aiAnalysis?.lineItems?.filter(
+    (item: any) => item.overchargeAmount > 0
+  ) ?? [];
+
+  const potentialSavings = analysisResult?.aiAnalysis?.potentialSavings
+    ?? overchargedItems.reduce((sum: number, item: any) => sum + item.overchargeAmount, 0);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -60,7 +124,7 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                    <h2 className="text-2xl font-display font-bold">Analyze Your Document</h2>
                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">Findr Document Intelligence</p>
                 </div>
-                <button 
+                <button
                   onClick={handleClose}
                   className="p-3 hover:bg-gray-100 rounded-full transition-colors"
                 >
@@ -71,15 +135,15 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
               {/* Content */}
               <div className="p-10">
                 {status === 'idle' && (
-                  <div 
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-4 border-dashed border-gray-100 rounded-[2.5rem] p-16 flex flex-col items-center justify-center gap-6 cursor-pointer hover:border-findr/30 hover:bg-findr-light/10 transition-all group"
                   >
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
                       accept=".pdf,.jpg,.jpeg,.png"
                     />
                     <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-400 group-hover:bg-white group-hover:text-findr group-hover:scale-110 transition-all shadow-sm">
@@ -98,7 +162,7 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                   <div className="py-12 flex flex-col items-center text-center">
                     <div className="relative mb-10">
                        <div className="w-32 h-32 border-4 border-gray-100 rounded-full" />
-                       <motion.div 
+                       <motion.div
                          animate={{ rotate: 360 }}
                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                          className="absolute inset-0 border-4 border-t-findr border-r-transparent border-b-transparent border-l-transparent rounded-full"
@@ -116,27 +180,54 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
                   </div>
                 )}
 
+                {status === 'error' && (
+                  <div className="py-12 flex flex-col items-center text-center">
+                    <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-10">
+                       <AlertCircle size={48} />
+                    </div>
+                    <h3 className="text-2xl font-display font-bold mb-4 tracking-tight">Something went wrong</h3>
+                    <p className="text-gray-500 font-medium max-w-xs mx-auto mb-8">
+                      We couldn't process this document. It may be a format we don't support yet, or it took too long to analyze. Try uploading a clearer image or a PDF.
+                    </p>
+                    <button
+                      onClick={reset}
+                      className="px-8 py-4 bg-black text-white rounded-2xl font-black text-lg hover:bg-cobalt transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+
                 {status === 'success' && (
                   <div className="py-12 flex flex-col items-center text-center">
-                    <motion.div 
+                    <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       className="w-24 h-24 bg-zest rounded-full flex items-center justify-center text-black mb-10 shadow-xl shadow-zest/20"
                     >
                        <CheckCircle2 size={48} />
                     </motion.div>
-                    <h3 className="text-3xl font-display font-bold mb-4 tracking-tight">Analysis Complete!</h3>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis Complete!</h3>
+                    {analysisResult?.aiAnalysis?.providerName && (
+                      <p className="text-gray-500 font-medium mb-4">
+                        {analysisResult.aiAnalysis.providerName} — {analysisResult.aiAnalysis.documentType}
+                      </p>
+                    )}
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-8 w-full text-left">
                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">What We Found</span>
-                          <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[9px] font-black uppercase">3 Found</span>
+                          <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[9px] font-black uppercase">
+                            {overchargedItems.length} Found
+                          </span>
                        </div>
                        <div className="flex items-center justify-between">
                           <span className="text-lg font-bold">Potential Savings</span>
-                          <span className="text-3xl font-display font-bold text-findr">$424.15</span>
+                          <span className="text-3xl font-display font-bold text-findr">
+                            ${potentialSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                        </div>
                     </div>
-                    <button onClick={() => console.log('View full analysis clicked')} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
+                    <button onClick={() => console.log('View full analysis clicked', analysisResult)} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
                        View Full Analysis <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                     </button>
                   </div>
@@ -146,12 +237,12 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
               {/* Footer Actions */}
               {status === 'idle' && (
                 <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex flex-col py-6">
-                  <button 
+                  <button
                     disabled={!file}
                     onClick={startAnalysis}
                     className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-xl ${
-                      file 
-                        ? "bg-findr text-white hover:bg-black shadow-findr/20" 
+                      file
+                        ? "bg-findr text-white hover:bg-black shadow-findr/20"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                     }`}
                   >
@@ -169,4 +260,3 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
     </AnimatePresence>
   );
 }
-
