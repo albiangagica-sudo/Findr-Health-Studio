@@ -107,12 +107,12 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setTimeout(reset, 300); // Reset after animation
   };
 
-  const overchargedItems = analysisResult?.lineItems?.filter(
-    (item: any) => item.overchargeAmount > 0
-  ) ?? [];
+  const overchargedItems = (analysisResult?.lineItems || []).filter(
+    (item: any) => item.analysis?.assessment !== 'fair' && item.billedAmount > (item.referencePricing?.fairPriceRange?.high || 0)
+  );
 
   const potentialSavings = analysisResult?.potentialSavings
-    ?? overchargedItems.reduce((sum: number, item: any) => sum + item.overchargeAmount, 0);
+    ?? overchargedItems.reduce((sum: number, item: any) => sum + (item.billedAmount - (item.referencePricing?.fairPriceRange?.high || 0)), 0);
 
   return (
     <AnimatePresence>
