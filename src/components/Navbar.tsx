@@ -63,7 +63,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
             <NavLink to="/how-it-works" icon={Zap} active={location.pathname === '/how-it-works'}>How it Works</NavLink>
           </div>
           <button onClick={onUploadClick} className="px-6 h-11 bg-zest text-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-lg shadow-zest/10 active:scale-95 flex items-center justify-center gap-2">
-            <Upload size={14} /> Audit a bill
+            <Upload size={14} /> Analyze a document
           </button>
           {user ? (
             <div className="flex items-center gap-4 border-l border-gray-100 pl-4 ml-2">
@@ -105,7 +105,7 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
               <div className="flex-1 overflow-y-auto px-8 pb-12 pt-4 overscroll-contain">
                 <div className="flex flex-col gap-8">
                   <button onClick={() => { onUploadClick?.(); setIsMenuOpen(false); }} className="w-full py-6 bg-zest text-black rounded-[2rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl shadow-zest/20 active:scale-95 transition-all">
-                    <Upload size={20} /> Audit a bill
+                    <Upload size={20} /> Analyze a document
                   </button>
                   <div className="flex flex-col gap-2">
                     <NavLink to="/" icon={Home} mobile active={location.pathname === '/'} onClick={() => setIsMenuOpen(false)}>Home</NavLink>
