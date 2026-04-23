@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock } from 'lucide-react';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -89,7 +89,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
             const data = await pollRes.json();
 
-            if (data.bill?.status === 'complete' || data.bill?.status === 'completed') {
+            if (data.bill?.status === 'complete' || data.bill?.status === 'completed' || data.bill?.status === 'timeout') {
               clearInterval(interval);
               clearTimeout(timeout);
               setAnalysisResult(data.bill);
@@ -144,6 +144,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   }, [status]);
 
   const handleDownloadReport = () => {
+    if (verdictType === 'non_healthcare' || verdictType === 'timeout') return;
     const provider = analysisResult?.provider;
     const providerName = provider?.providerName || 'Unknown Provider';
     const serviceDate = provider?.serviceDate
@@ -271,14 +272,14 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0;">${analysisResult.explanation}</div>
     </div>` : ''}
 
-    ${analysisResult?.callScript && verdictType !== 'zero_balance' ? `
+    ${analysisResult?.callScript && verdictType !== 'zero_balance' && verdictType !== 'timeout' ? `
     <!-- Call Script -->
     <div style="margin-bottom: 36px;">
       <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">What To Say When You Call</div>
       <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #FFFBEB; border-radius: 12px; border: 1px solid #FDE68A; white-space: pre-wrap;">${analysisResult.callScript}</div>
     </div>` : ''}
 
-    ${analysisResult?.negotiationScript && verdictType !== 'zero_balance' ? `
+    ${analysisResult?.negotiationScript && verdictType !== 'zero_balance' && verdictType !== 'timeout' ? `
     <!-- Negotiation Script -->
     <div style="margin-bottom: 36px;">
       <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">Negotiation Script</div>
@@ -440,6 +441,31 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   </div>
                 )}
 
+                {/* --- SUCCESS: timeout --- */}
+                {status === 'success' && verdictType === 'timeout' && (
+                  <div className="py-6 flex flex-col items-center text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-6"
+                    >
+                       <Clock size={32} />
+                    </motion.div>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis took too long</h3>
+                    {analysisResult?.provider?.verdictMessage && (
+                      <p className="text-gray-500 font-medium mb-8 max-w-sm">
+                        {analysisResult.provider.verdictMessage}
+                      </p>
+                    )}
+                    <button
+                      onClick={reset}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors"
+                    >
+                      Try another document
+                    </button>
+                  </div>
+                )}
+
                 {/* --- SUCCESS: zero_balance celebration --- */}
                 {status === 'success' && verdictType === 'zero_balance' && (
                   <div className="py-6 flex flex-col items-center text-center">
@@ -476,7 +502,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                 )}
 
                 {/* --- SUCCESS: default (overcharged, fair, insurance_covered, etc.) --- */}
-                {status === 'success' && verdictType !== 'non_healthcare' && verdictType !== 'zero_balance' && (
+                {status === 'success' && verdictType !== 'non_healthcare' && verdictType !== 'timeout' && verdictType !== 'zero_balance' && (
                   <div className="py-6 flex flex-col items-center text-center">
                     <motion.div
                       initial={{ scale: 0 }}
@@ -528,6 +554,27 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors"
                     >
                       Upload a different document
+                    </button>
+                  </div>
+                )}
+
+                {/* --- DETAILS: timeout short-circuit --- */}
+                {status === 'details' && analysisResult && verdictType === 'timeout' && (
+                  <div className="py-6 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-6">
+                       <Clock size={32} />
+                    </div>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis took too long</h3>
+                    {analysisResult?.provider?.verdictMessage && (
+                      <p className="text-gray-500 font-medium mb-8 max-w-sm">
+                        {analysisResult.provider.verdictMessage}
+                      </p>
+                    )}
+                    <button
+                      onClick={reset}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors"
+                    >
+                      Try another document
                     </button>
                   </div>
                 )}
@@ -613,7 +660,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                 )}
 
                 {/* --- DETAILS: default (overcharged, fair, insurance_covered, etc.) --- */}
-                {status === 'details' && analysisResult && verdictType !== 'non_healthcare' && verdictType !== 'zero_balance' && (
+                {status === 'details' && analysisResult && verdictType !== 'non_healthcare' && verdictType !== 'timeout' && verdictType !== 'zero_balance' && (
                   <div className="space-y-8">
                     {/* Back button */}
                     <button
