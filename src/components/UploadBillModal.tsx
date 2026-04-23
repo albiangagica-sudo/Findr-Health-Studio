@@ -27,18 +27,25 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const startAnalysis = useCallback(async (fileToAnalyze?: File) => {
     const targetFile = fileToAnalyze || file;
     if (!targetFile) return;
+    console.log('startAnalysis called, file:', targetFile?.name, targetFile?.size);
     if (fileToAnalyze) setFile(fileToAnalyze);
     setStatus('uploading');
 
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const headers: Record<string, string> = token
-        ? { 'Authorization': `Bearer ${token}` }
-        : { 'x-user-id': 'anonymous' };
+      let headers: Record<string, string> = { 'x-user-id': 'anonymous' };
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (token) {
+          headers = { 'Authorization': `Bearer ${token}` };
+        }
+      } catch (e) {
+        console.log('Firebase auth unavailable, using anonymous');
+      }
 
       const formData = new FormData();
       formData.append('image', targetFile);
 
+      console.log('About to POST to', API_BASE + '/analyze');
       const uploadRes = await fetch(`${API_BASE}/analyze`, {
         method: 'POST',
         headers,
