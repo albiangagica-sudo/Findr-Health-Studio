@@ -179,6 +179,14 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
         </tr>`;
     }).join('');
 
+    const lineItemRowsSimple = (analysisResult?.lineItems || []).map((item: any, i: number) => {
+      return `
+        <tr style="background: ${i % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #141414;">${item.description}</td>
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; text-align: right; font-weight: 600; color: #141414;">${formatMoney(item.billedAmount)}</td>
+        </tr>`;
+    }).join('');
+
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -247,8 +255,23 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       </tr>
     </table>`}
 
-    ${analysisResult?.lineItems?.length ? `
-    <!-- Charges Breakdown -->
+    ${analysisResult?.lineItems?.length && verdictType === 'zero_balance' ? `
+    <!-- Charges Breakdown (zero balance — 2 columns) -->
+    <div style="margin-bottom: 36px;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 16px;">Charges Breakdown</div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden;">
+        <thead>
+          <tr style="background: #F8FAFC;">
+            <th style="padding: 12px 16px; text-align: left; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Service</th>
+            <th style="padding: 12px 16px; text-align: right; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Billed</th>
+          </tr>
+        </thead>
+        <tbody>${lineItemRowsSimple}</tbody>
+      </table>
+    </div>` : ''}
+
+    ${analysisResult?.lineItems?.length && verdictType !== 'zero_balance' ? `
+    <!-- Charges Breakdown (full — 5 columns) -->
     <div style="margin-bottom: 36px;">
       <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 16px;">Charges Breakdown</div>
       <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden;">
@@ -620,18 +643,15 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       </div>
                     </div>
 
-                    {/* Line items — simple table, no referencePricing */}
+                    {/* Line items — simple 2-column table: description + billed */}
                     {analysisResult.lineItems?.length > 0 && (
                       <div>
                         <h4 className="text-lg font-display font-bold mb-4">Charges Breakdown</h4>
                         <div className="space-y-3">
                           {analysisResult.lineItems.map((item: any, i: number) => (
                             <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
-                              <p className="font-bold text-sm">
-                                {item.description}
-                                {item.cptCode && <span className="text-gray-400 font-medium ml-1">({item.cptCode})</span>}
-                              </p>
-                              <span className="font-bold text-sm">{formatMoney(item.billedAmount)}</span>
+                              <p className="font-bold text-sm">{item.description}</p>
+                              <span className="font-bold text-sm shrink-0 ml-4">{formatMoney(item.billedAmount)}</span>
                             </div>
                           ))}
                         </div>
