@@ -1,11 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, Loader2, Zap } from 'lucide-react';
 import { auth } from '../lib/firebase';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
-export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+interface UploadBillModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialFile?: File | null;
+  onFileConsumed?: () => void;
+}
+
+export default function UploadBillModal({ isOpen, onClose, initialFile, onFileConsumed }: UploadBillModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error'>('idle');
   const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -17,8 +24,10 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
     }
   };
 
-  const startAnalysis = async () => {
-    if (!file) return;
+  const startAnalysis = useCallback(async (fileToAnalyze?: File) => {
+    const targetFile = fileToAnalyze || file;
+    if (!targetFile) return;
+    if (fileToAnalyze) setFile(fileToAnalyze);
     setStatus('uploading');
 
     try {
@@ -28,7 +37,7 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
         : { 'x-user-id': 'anonymous' };
 
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', targetFile);
 
       const uploadRes = await fetch(`${API_BASE}/analyze`, {
         method: 'POST',
@@ -80,7 +89,14 @@ export default function UploadBillModal({ isOpen, onClose }: { isOpen: boolean, 
     } catch {
       setStatus('error');
     }
-  };
+  }, [file]);
+
+  useEffect(() => {
+    if (initialFile && isOpen) {
+      startAnalysis(initialFile);
+      onFileConsumed?.();
+    }
+  }, [initialFile, isOpen]);
 
   const reset = () => {
     setFile(null);

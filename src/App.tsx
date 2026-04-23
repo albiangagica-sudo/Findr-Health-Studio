@@ -173,6 +173,7 @@ function AuthenticatedHome() {
 export default function App() {
   const [user, setUser] = useState(auth.currentUser);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -182,8 +183,19 @@ export default function App() {
 
   useEffect(() => {
     const handleOpenUpload = () => setIsUploadOpen(true);
+    const handleOpenUploadWithFile = (e: Event) => {
+      const file = (e as CustomEvent).detail?.file;
+      if (file) {
+        setPendingFile(file);
+        setIsUploadOpen(true);
+      }
+    };
     window.addEventListener('open-upload', handleOpenUpload);
-    return () => window.removeEventListener('open-upload', handleOpenUpload);
+    window.addEventListener('open-upload-with-file', handleOpenUploadWithFile);
+    return () => {
+      window.removeEventListener('open-upload', handleOpenUpload);
+      window.removeEventListener('open-upload-with-file', handleOpenUploadWithFile);
+    };
   }, []);
 
   // Scroll to top on route change
@@ -196,7 +208,12 @@ export default function App() {
       <div className={`min-h-screen transition-colors duration-500 ${location.pathname === '/enterprise' ? 'bg-black' : 'bg-[#FBFBFE]'} text-black font-sans selection:bg-findr/30 selection:text-black`}>
         <Navbar onUploadClick={() => setIsUploadOpen(true)} />
         <ClarityAI />
-        <UploadBillModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} />
+        <UploadBillModal
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+          initialFile={pendingFile}
+          onFileConsumed={() => setPendingFile(null)}
+        />
         
         <main>
           <AnimatePresence mode="wait">
