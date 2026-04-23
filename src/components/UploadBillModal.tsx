@@ -255,7 +255,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                 <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex flex-col py-6">
                   <button
                     disabled={!file}
-                    onClick={startAnalysis}
+                    onClick={() => startAnalysis()}
                     className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-xl ${
                       file
                         ? "bg-findr text-white hover:bg-black shadow-findr/20"
