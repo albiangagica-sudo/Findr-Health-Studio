@@ -212,6 +212,19 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     </div>` : ''}
 
     <!-- Summary -->
+    ${verdictType === 'zero_balance' ? `
+    <table style="width: 100%; border-collapse: separate; border-spacing: 8px; margin-bottom: 36px;">
+      <tr>
+        <td style="width: 50%; padding: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; margin-bottom: 8px;">Total Billed</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #141414;">${formatMoney(analysisResult?.totalBilled)}</div>
+        </td>
+        <td style="width: 50%; padding: 24px; background: #D1FAE5; border: 1px solid #A7F3D0; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #059669; font-weight: 700; margin-bottom: 8px;">You Owe</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #059669;">$0.00</div>
+        </td>
+      </tr>
+    </table>` : `
     <table style="width: 100%; border-collapse: separate; border-spacing: 8px; margin-bottom: 36px;">
       <tr>
         <td style="width: 25%; padding: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px;">
@@ -231,7 +244,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
           <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #2E5BFF;">${formatMoney(potentialSavings)}</div>
         </td>
       </tr>
-    </table>
+    </table>`}
 
     ${analysisResult?.lineItems?.length ? `
     <!-- Charges Breakdown -->
@@ -258,14 +271,14 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0;">${analysisResult.explanation}</div>
     </div>` : ''}
 
-    ${analysisResult?.callScript ? `
+    ${analysisResult?.callScript && verdictType !== 'zero_balance' ? `
     <!-- Call Script -->
     <div style="margin-bottom: 36px;">
       <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">What To Say When You Call</div>
       <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #FFFBEB; border-radius: 12px; border: 1px solid #FDE68A; white-space: pre-wrap;">${analysisResult.callScript}</div>
     </div>` : ''}
 
-    ${analysisResult?.negotiationScript ? `
+    ${analysisResult?.negotiationScript && verdictType !== 'zero_balance' ? `
     <!-- Negotiation Script -->
     <div style="margin-bottom: 36px;">
       <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">Negotiation Script</div>
@@ -299,6 +312,8 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const documentTypeLabel = DOCUMENT_TYPE_LABELS[analysisResult?.provider?.documentType] || analysisResult?.provider?.documentType || 'Medical Document';
 
   const isOvercharged = potentialSavings > 0 || overchargedItems.length > 0;
+
+  const verdictType = analysisResult?.provider?.verdictType;
 
   return (
     <AnimatePresence>
@@ -400,7 +415,68 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   </div>
                 )}
 
-                {status === 'success' && (
+                {/* --- SUCCESS: non_healthcare rejection --- */}
+                {status === 'success' && verdictType === 'non_healthcare' && (
+                  <div className="py-6 flex flex-col items-center text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-6"
+                    >
+                       <AlertCircle size={32} />
+                    </motion.div>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">This isn't a medical document</h3>
+                    {analysisResult?.provider?.verdictMessage && (
+                      <p className="text-gray-500 font-medium mb-8 max-w-sm">
+                        {analysisResult.provider.verdictMessage}
+                      </p>
+                    )}
+                    <button
+                      onClick={reset}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors"
+                    >
+                      Upload a different document
+                    </button>
+                  </div>
+                )}
+
+                {/* --- SUCCESS: zero_balance celebration --- */}
+                {status === 'success' && verdictType === 'zero_balance' && (
+                  <div className="py-6 flex flex-col items-center text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-20 h-20 bg-zest rounded-full flex items-center justify-center text-black mb-6 shadow-xl shadow-zest/30"
+                    >
+                       <CheckCircle2 size={40} />
+                    </motion.div>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">You're all paid up!</h3>
+                    {analysisResult?.provider?.verdictMessage && (
+                      <p className="text-gray-500 font-medium mb-2 max-w-sm">
+                        {analysisResult.provider.verdictMessage}
+                      </p>
+                    )}
+                    {analysisResult?.provider?.providerName && (
+                      <p className="text-gray-400 text-sm mb-8">
+                        From {analysisResult.provider.providerName}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-3 w-full">
+                      <button onClick={() => setStatus('details')} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
+                        View Full Details <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                      </button>
+                      <button
+                        onClick={reset}
+                        className="w-full py-4 text-gray-500 hover:text-black font-bold text-sm transition-colors"
+                      >
+                        Analyze another document
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* --- SUCCESS: default (overcharged, fair, insurance_covered, etc.) --- */}
+                {status === 'success' && verdictType !== 'non_healthcare' && verdictType !== 'zero_balance' && (
                   <div className="py-6 flex flex-col items-center text-center">
                     <motion.div
                       initial={{ scale: 0 }}
@@ -435,7 +511,109 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   </div>
                 )}
 
-                {status === 'details' && analysisResult && (
+                {/* --- DETAILS: non_healthcare short-circuit to rejection --- */}
+                {status === 'details' && analysisResult && verdictType === 'non_healthcare' && (
+                  <div className="py-6 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mb-6">
+                       <AlertCircle size={32} />
+                    </div>
+                    <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">This isn't a medical document</h3>
+                    {analysisResult?.provider?.verdictMessage && (
+                      <p className="text-gray-500 font-medium mb-8 max-w-sm">
+                        {analysisResult.provider.verdictMessage}
+                      </p>
+                    )}
+                    <button
+                      onClick={reset}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors"
+                    >
+                      Upload a different document
+                    </button>
+                  </div>
+                )}
+
+                {/* --- DETAILS: zero_balance --- */}
+                {status === 'details' && analysisResult && verdictType === 'zero_balance' && (
+                  <div className="space-y-8">
+                    {/* Back button */}
+                    <button
+                      onClick={() => setStatus('success')}
+                      className="flex items-center gap-2 text-gray-500 hover:text-black font-bold text-sm transition-colors"
+                    >
+                      <ArrowLeft size={16} /> Back to Summary
+                    </button>
+
+                    {/* Provider header */}
+                    <div>
+                      <h3 className="text-2xl font-display font-bold tracking-tight">
+                        {analysisResult.provider?.providerName || 'Unknown Provider'}
+                      </h3>
+                      <p className="text-gray-400 font-medium text-sm mt-1">{documentTypeLabel}</p>
+                      {analysisResult.provider?.serviceDate && (
+                        <p className="text-gray-400 text-sm mt-1">
+                          Service Date: {new Date(analysisResult.provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      )}
+                      {analysisResult.provider?.verdictMessage && (
+                        <div className="mt-4 p-4 rounded-2xl text-sm font-bold bg-green-50 text-green-700">
+                          {analysisResult.provider.verdictMessage}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Summary — 2 cards only */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Billed</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.totalBilled)}</p>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                        <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">You Owe</p>
+                        <p className="text-xl font-display font-bold text-green-700">$0.00</p>
+                      </div>
+                    </div>
+
+                    {/* Line items — simple table, no referencePricing */}
+                    {analysisResult.lineItems?.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">Charges Breakdown</h4>
+                        <div className="space-y-3">
+                          {analysisResult.lineItems.map((item: any, i: number) => (
+                            <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                              <p className="font-bold text-sm">
+                                {item.description}
+                                {item.cptCode && <span className="text-gray-400 font-medium ml-1">({item.cptCode})</span>}
+                              </p>
+                              <span className="font-bold text-sm">{formatMoney(item.billedAmount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Explanation */}
+                    {analysisResult.explanation && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">What This Means</h4>
+                        <p className="text-gray-600 leading-relaxed">{analysisResult.explanation}</p>
+                      </div>
+                    )}
+
+                    {/* Download Report */}
+                    <div>
+                      <button
+                        onClick={handleDownloadReport}
+                        className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group"
+                      >
+                        <Download size={20} /> Download Report
+                      </button>
+                      <p className="text-[10px] text-center text-gray-400 font-bold uppercase tracking-widest mt-3">Opens print dialog — select "Save as PDF"</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* --- DETAILS: default (overcharged, fair, insurance_covered, etc.) --- */}
+                {status === 'details' && analysisResult && verdictType !== 'non_healthcare' && verdictType !== 'zero_balance' && (
                   <div className="space-y-8">
                     {/* Back button */}
                     <button
