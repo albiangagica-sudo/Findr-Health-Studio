@@ -72,9 +72,9 @@ function HomePage() {
                         transition={{ delay: 0.2 }}
                         className="text-[3.2rem] md:text-[5.1rem] xl:text-[6.4rem] font-display font-bold tracking-tight leading-[0.85] mb-10"
                      >
-                        <span className="block whitespace-nowrap">Health bills</span>
+                        <span className="block whitespace-nowrap">What did they</span>
                         <span className="text-findr relative block">
-                           simplified.
+                           send you?
                            <svg className="absolute -bottom-2 left-0 w-full h-3 text-zest/40 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                               <path d="M0 5 Q 25 0, 50 5 T 100 5 L 100 10 L 0 10 Z" fill="currentColor" />
                            </svg>
@@ -87,7 +87,7 @@ function HomePage() {
                         transition={{ delay: 0.3 }}
                         className="text-xl md:text-2xl text-gray-500 font-medium mb-12 max-w-xl lg:mx-0 mx-auto leading-relaxed"
                      >
-                        Stop overpaying for healthcare. Findr analyzes your claims to flag errors and unlock savings for your family.
+                        Upload any medical document. Findr translates it into plain English, finds what's wrong, and gives you the exact steps to fix it.
                      </motion.p>
                      
                      <motion.div 
@@ -100,7 +100,7 @@ function HomePage() {
                           onClick={() => window.dispatchEvent(new CustomEvent('open-upload'))}
                           className="group w-full sm:w-auto px-12 py-6 bg-black text-white rounded-[2.5rem] font-black text-xl shadow-2xl hover:bg-cobalt transition-all flex items-center justify-center gap-3 relative overflow-hidden"
                         >
-                           <span className="relative z-10">Start here</span>
+                           <span className="relative z-10">Upload your document</span>
                            <ArrowRight size={24} className="relative z-10 group-hover:translate-x-2 transition-transform" />
                            <div className="absolute inset-0 bg-findr opacity-0 group-hover:opacity-20 transition-opacity" />
                         </button>
