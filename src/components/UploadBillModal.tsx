@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, Loader2, Zap } from 'lucide-react';
-import { auth } from '../lib/firebase';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -32,15 +31,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setStatus('uploading');
 
     try {
-      let headers: Record<string, string> = { 'x-user-id': 'anonymous' };
-      try {
-        const token = await auth.currentUser?.getIdToken();
-        if (token) {
-          headers = { 'Authorization': `Bearer ${token}` };
-        }
-      } catch (e) {
-        console.log('Firebase auth unavailable, using anonymous');
-      }
+      const headers = { 'x-user-id': 'anonymous' };
 
       const formData = new FormData();
       formData.append('image', targetFile);
