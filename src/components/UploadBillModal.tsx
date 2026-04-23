@@ -66,7 +66,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
             const data = await pollRes.json();
 
-            if (data.status === 'completed') {
+            if (data.status === 'complete' || data.status === 'completed') {
               clearInterval(interval);
               clearTimeout(timeout);
               setAnalysisResult(data);
