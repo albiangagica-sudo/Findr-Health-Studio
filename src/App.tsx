@@ -22,6 +22,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, ChevronDown, Sparkles, Activity } from 'lucide-react';
 import { Logo as BrandLogo } from './components/Logo';
 import LockedGate from './components/LockedGate';
+import ClarityAISection from './components/ClarityAISection';
 
 function LandingSections() {
   return (
@@ -138,6 +139,7 @@ function HomePage() {
          <BillAnalysis />
       </div>
 
+      <ClarityAISection />
       <LandingSections />
     </>
   );
