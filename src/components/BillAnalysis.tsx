@@ -1,10 +1,10 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload, FileText, CheckCircle2, AlertCircle, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, Activity, Zap, Sparkles, ShieldCheck } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle, TrendingDown, DollarSign, Wallet, ArrowRight, Activity, Zap, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function BillAnalysis() {
-  const [step, setStep] = useState<'idle' | 'uploading' | 'analyzing' | 'results' | 'paywall'>('idle');
+  const [step, setStep] = useState<'idle' | 'uploading' | 'analyzing' | 'results'>('idle');
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -149,40 +149,16 @@ export default function BillAnalysis() {
                            <p className="text-7xl font-display font-bold text-black tracking-tighter leading-none">$412.50</p>
                         </div>
 
-                        <button 
-                           onClick={() => setStep('paywall')}
+                        <button
+                           onClick={() => console.log('View full analysis clicked')}
                            className="w-full py-7 bg-black text-white rounded-[2rem] font-black text-xl shadow-2xl hover:bg-cobalt transition-all group active:scale-95"
                         >
-                          Claim Refund Scripts <ArrowRight className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+                          View Full Analysis <ArrowRight className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
                         </button>
                       </motion.div>
                     )}
 
-                    {step === 'paywall' && (
-                      <motion.div 
-                        key="paywall"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full"
-                      >
-                        <div className="w-24 h-24 bg-zest rounded-[2rem] flex items-center justify-center text-black mx-auto mb-8 shadow-xl rotate-12 relative">
-                           <Sparkles size={36} />
-                           <div className="absolute -top-2 -right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black text-xs">AI</div>
-                        </div>
-                        <h3 className="text-4xl font-display font-bold mb-4 tracking-tight">One step away.</h3>
-                        <p className="text-gray-500 font-medium mb-12 max-w-xs mx-auto">Get your custom-drafted medical dispute letter and a guide to win your claim for just <span className="text-black font-black">$49</span>.</p>
-                        
-                        <button className="w-full py-7 bg-black text-white rounded-[2.5rem] font-black text-xl shadow-2xl hover:bg-cobalt transition-all active:scale-95 mb-8">
-                           Secure Check-out
-                        </button>
-                        
-                        <div className="flex items-center justify-center gap-6 opacity-30 grayscale">
-                           <ShieldCheck size={24} />
-                           <CreditCard size={24} />
-                           <p className="text-[9px] font-black uppercase tracking-widest">Encrypted</p>
-                        </div>
-                      </motion.div>
-                    )}
+
                  </AnimatePresence>
               </div>
             </motion.div>
