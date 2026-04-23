@@ -5,23 +5,23 @@ import { Link } from 'react-router-dom';
 export default function HealthBlog() {
   const posts = [
     {
-      title: "The hidden 'Triage' tax you're likely paying.",
-      excerpt: "Why some insurance companies deny valid claims during the intake process and how to fight it.",
+      title: "Your hospital bill is negotiable. Here's the script.",
+      excerpt: "Most patients don't know they can call billing and ask for a prompt-pay discount. Here's exactly what to say to save 20-40%.",
       category: "Billing Secrets",
       readTime: "4 min",
       image: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&q=80&w=800"
     },
     {
-      title: "Why your HMO might be denying valid lab work.",
-      excerpt: "Decoding the fine print of your healthcare plan to avoid out-of-pocket lab surprises.",
-      category: "Insurance Guard",
+      title: "That 'facility fee'? You shouldn't have to pay it.",
+      excerpt: "If your doctor's office is owned by a hospital, you're paying hundreds extra just for walking in the door. Here's how to fight back.",
+      category: "Hidden Charges",
       readTime: "6 min",
       image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800"
     },
     {
-      title: "Negotiation scripts for out-of-network labs.",
-      excerpt: "Practical, battle-tested messages you can send to healthcare providers for instant discounts.",
-      category: "Savings Guide",
+      title: "5 words that cut any medical bill by 30%",
+      excerpt: "'What is your prompt-pay discount?' These five words have saved Findr users thousands. Here's why they work every time.",
+      category: "Savings Playbook",
       readTime: "5 min",
       image: "https://images.unsplash.com/photo-1454165833767-131438967469?auto=format&fit=crop&q=80&w=800"
     }
@@ -37,15 +37,18 @@ export default function HealthBlog() {
                whileInView={{ opacity: 1, x: 0 }}
                className="inline-flex items-center gap-2 px-3 py-1 bg-lavender/20 text-lavender-dark rounded-full text-[10px] font-black uppercase tracking-widest mb-6"
              >
-               <Sparkles size={14} /> Knowledge Hub
+               <Sparkles size={14} /> Insider Knowledge
              </motion.div>
              <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tight leading-[0.9]">
-                Healthy hub. <br />
-                <span className="text-cobalt italic">Expert insights.</span>
+                The insider <br />
+                <span className="text-cobalt italic">playbook.</span>
              </h2>
+             <p className="text-xl text-gray-500 font-medium mt-8 max-w-md leading-relaxed">
+                No wellness tips. No lifestyle advice. Just the billing secrets the healthcare system doesn't want you to know.
+             </p>
           </div>
           <Link to="/health-tips" className="flex items-center gap-3 text-sm font-black uppercase tracking-widest hover:gap-6 transition-all group">
-             View All Tips <ArrowRight size={20} className="group-hover:translate-x-1" />
+             View All Articles <ArrowRight size={20} className="group-hover:translate-x-1" />
           </Link>
         </div>
 

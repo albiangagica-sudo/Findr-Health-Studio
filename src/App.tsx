@@ -2,37 +2,24 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Features from './components/Features';
-import FindrFridaysSection from './components/FindrFridays';
-import AppDownload from './components/AppDownload';
 import BillAnalysis from './components/BillAnalysis';
 import HealthBlog from './components/HealthBlog';
 import Dashboard from './components/Dashboard';
 import ClarityAI from './components/ClarityAI';
 import UploadBillModal from './components/UploadBillModal';
 import HowItWorks from './pages/HowItWorks';
-import FindrFridays from './pages/FindrFridays';
 import HealthTips from './pages/HealthTips';
 import Enterprise from './pages/Enterprise';
-import FamilyWellnessDashboard from './pages/FamilyWellnessDashboard';
 import { RotatingClaimCard } from './components/RotatingClaimCard';
-import { PhoneMockup } from './components/PhoneMockup';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { ArrowRight, ChevronDown, Sparkles, Activity } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { Logo as BrandLogo } from './components/Logo';
 import LockedGate from './components/LockedGate';
 import ClarityAISection from './components/ClarityAISection';
 
 function LandingSections() {
-  return (
-    <>
-      <Features />
-      <FindrFridaysSection />
-      <AppDownload />
-      <HealthBlog />
-    </>
-  );
+  return <HealthBlog />;
 }
 
 function HomePage() {
@@ -222,8 +209,6 @@ export default function App() {
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={user ? <AuthenticatedHome /> : <HomePage />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/dashboard/family-wellness" element={<FamilyWellnessDashboard />} />
-              <Route path="/findr-fridays" element={<FindrFridays />} />
               <Route path="/health-tips" element={<HealthTips />} />
               <Route path="/enterprise" element={<Enterprise />} />
             </Routes>
@@ -248,24 +233,6 @@ export default function App() {
                        ))}
                     </div>
                     
-                    <div className="flex flex-wrap gap-3">
-                      <a href="#" className="transition-transform hover:scale-105 active:scale-95">
-                        <img 
-                          src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-                          alt="Download on the App Store" 
-                          className="h-10 w-auto"
-                          referrerPolicy="no-referrer"
-                        />
-                      </a>
-                      <a href="#" className="transition-transform hover:scale-105 active:scale-95">
-                        <img 
-                          src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-                          alt="Get it on Google Play" 
-                          className="h-10 w-auto"
-                          referrerPolicy="no-referrer"
-                        />
-                      </a>
-                    </div>
                  </div>
                  
                  <div>
@@ -273,7 +240,6 @@ export default function App() {
                     <ul className="space-y-4 text-gray-400 font-bold text-sm uppercase tracking-widest">
                        <li><RouteLink to="/" className="hover:text-white transition-colors">Home</RouteLink></li>
                        <li><RouteLink to="/how-it-works" className="hover:text-white transition-colors">How it Works</RouteLink></li>
-                       <li><RouteLink to="/findr-fridays" className="hover:text-white transition-colors">Findr Fridays</RouteLink></li>
                        <li><RouteLink to="/health-tips" className="hover:text-white transition-colors">Health Tips</RouteLink></li>
                        <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
                     </ul>

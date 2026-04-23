@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { LogIn, LogOut, User, Menu, X, Zap, Gift, BookOpen, Crown, Home, Upload, Mail, FileText, Lock, ShieldCheck, Activity } from 'lucide-react';
+import { LogIn, LogOut, User, Menu, X, Zap, BookOpen, Crown, Home, Upload, Mail, FileText, Lock, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
@@ -110,8 +110,6 @@ export default function Navbar({ onUploadClick }: { onUploadClick?: () => void }
                   <div className="flex flex-col gap-2">
                     <NavLink to="/" icon={Home} mobile active={location.pathname === '/'} onClick={() => setIsMenuOpen(false)}>Home</NavLink>
                     <NavLink to="/how-it-works" icon={Zap} mobile active={location.pathname === '/how-it-works'} onClick={() => setIsMenuOpen(false)}>How it Works</NavLink>
-                    <NavLink to="/dashboard/family-wellness" icon={Activity} mobile active={location.pathname === '/dashboard/family-wellness'} onClick={() => setIsMenuOpen(false)}>Wellness Dashboard</NavLink>
-                    <NavLink to="/findr-fridays" icon={Gift} mobile active={location.pathname === '/findr-fridays'} onClick={() => setIsMenuOpen(false)}>Findr Fridays</NavLink>
                     <NavLink to="/health-tips" icon={BookOpen} mobile active={location.pathname === '/health-tips'} onClick={() => setIsMenuOpen(false)}>Health Tips</NavLink>
                     <NavLink to="/enterprise" icon={Crown} mobile active={location.pathname === '/enterprise'} onClick={() => setIsMenuOpen(false)}>Enterprise</NavLink>
                     <a href="mailto:contact@findrhealth.com" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold py-4 px-5 text-black/60 hover:text-black transition-colors uppercase tracking-tight flex items-center gap-4 rounded-2xl hover:bg-gray-100">
