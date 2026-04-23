@@ -1,8 +1,31 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, Loader2, Zap } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check } from 'lucide-react';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  insurance_eob: 'Insurance Explanation of Benefits',
+  hospital_bill: 'Hospital Bill',
+  lab_bill: 'Lab Bill',
+  pharmacy_bill: 'Pharmacy Bill',
+  dental_bill: 'Dental Bill',
+  medical_bill: 'Medical Bill',
+  clinic_bill: 'Clinic Bill',
+  specialist_bill: 'Specialist Bill',
+};
+
+const ASSESSMENT_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  fair: { bg: 'bg-green-100', text: 'text-green-700', label: 'Fair' },
+  high: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'High' },
+  very_high: { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Very High' },
+  extreme: { bg: 'bg-red-100', text: 'text-red-700', label: 'Extreme' },
+};
+
+function formatMoney(amount: number | undefined | null): string {
+  if (amount == null) return '$0.00';
+  return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 interface UploadBillModalProps {
   isOpen: boolean;
@@ -13,8 +36,9 @@ interface UploadBillModalProps {
 
 export default function UploadBillModal({ isOpen, onClose, initialFile, onFileConsumed }: UploadBillModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error' | 'details'>('idle');
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +50,6 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const startAnalysis = useCallback(async (fileToAnalyze?: File) => {
     const targetFile = fileToAnalyze || file;
     if (!targetFile) return;
-    console.log('startAnalysis called, file:', targetFile?.name, targetFile?.size);
     if (fileToAnalyze) setFile(fileToAnalyze);
     setStatus('uploading');
 
@@ -36,7 +59,6 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       const formData = new FormData();
       formData.append('image', targetFile);
 
-      console.log('About to POST to', API_BASE + '/analyze');
       const uploadRes = await fetch(`${API_BASE}/analyze`, {
         method: 'POST',
         headers,
@@ -100,11 +122,18 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setFile(null);
     setStatus('idle');
     setAnalysisResult(null);
+    setCopied(false);
   };
 
   const handleClose = () => {
     onClose();
-    setTimeout(reset, 300); // Reset after animation
+    setTimeout(reset, 300);
+  };
+
+  const handleCopyScript = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const overchargedItems = (analysisResult?.lineItems || []).filter(
@@ -113,6 +142,10 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
   const potentialSavings = analysisResult?.potentialSavings
     ?? overchargedItems.reduce((sum: number, item: any) => sum + (item.billedAmount - (item.referencePricing?.fairPriceRange?.high || 0)), 0);
+
+  const documentTypeLabel = DOCUMENT_TYPE_LABELS[analysisResult?.provider?.documentType] || analysisResult?.provider?.documentType || 'Medical Document';
+
+  const isOvercharged = potentialSavings > 0 || overchargedItems.length > 0;
 
   return (
     <AnimatePresence>
@@ -130,12 +163,14 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-xl bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto"
+              className={`w-full bg-white rounded-[3rem] shadow-2xl relative overflow-hidden pointer-events-auto ${status === 'details' ? 'max-w-2xl max-h-[90vh] flex flex-col' : 'max-w-xl'}`}
             >
               {/* Header */}
-              <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+              <div className="p-8 border-b border-gray-50 flex items-center justify-between shrink-0">
                 <div>
-                   <h2 className="text-2xl font-display font-bold">Analyze Your Document</h2>
+                   <h2 className="text-2xl font-display font-bold">
+                     {status === 'details' ? 'Full Analysis' : 'Analyze Your Document'}
+                   </h2>
                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">Findr Document Intelligence</p>
                 </div>
                 <button
@@ -147,7 +182,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               </div>
 
               {/* Content */}
-              <div className="p-10">
+              <div className={`p-10 ${status === 'details' ? 'overflow-y-auto' : ''}`}>
                 {status === 'idle' && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
@@ -224,7 +259,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis Complete!</h3>
                     {analysisResult?.provider?.providerName && (
                       <p className="text-gray-500 font-medium mb-4">
-                        {analysisResult.provider.providerName} — {analysisResult.provider.documentType}
+                        {analysisResult.provider.providerName} — {documentTypeLabel}
                       </p>
                     )}
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-8 w-full text-left">
@@ -237,13 +272,143 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <div className="flex items-center justify-between">
                           <span className="text-lg font-bold">Potential Savings</span>
                           <span className="text-3xl font-display font-bold text-findr">
-                            ${potentialSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {formatMoney(potentialSavings)}
                           </span>
                        </div>
                     </div>
-                    <button onClick={() => console.log('View full analysis clicked', analysisResult)} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
+                    <button onClick={() => setStatus('details')} className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-cobalt transition-colors group">
                        View Full Analysis <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
                     </button>
+                  </div>
+                )}
+
+                {status === 'details' && analysisResult && (
+                  <div className="space-y-8">
+                    {/* Back button */}
+                    <button
+                      onClick={() => setStatus('success')}
+                      className="flex items-center gap-2 text-gray-500 hover:text-black font-bold text-sm transition-colors"
+                    >
+                      <ArrowLeft size={16} /> Back to Summary
+                    </button>
+
+                    {/* Provider header */}
+                    <div>
+                      <h3 className="text-2xl font-display font-bold tracking-tight">
+                        {analysisResult.provider?.providerName || 'Unknown Provider'}
+                      </h3>
+                      <p className="text-gray-400 font-medium text-sm mt-1">{documentTypeLabel}</p>
+                      {analysisResult.provider?.serviceDate && (
+                        <p className="text-gray-400 text-sm mt-1">
+                          Service Date: {new Date(analysisResult.provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      )}
+                      {analysisResult.provider?.verdictMessage && (
+                        <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${isOvercharged ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                          {analysisResult.provider.verdictMessage}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Summary bar */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Billed</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.totalBilled)}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Fair Market</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.provider?.totalEstimatedFair)}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Your Responsibility</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.provider?.patientResponsibility)}</p>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                        <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Potential Savings</p>
+                        <p className="text-xl font-display font-bold text-green-700">{formatMoney(potentialSavings)}</p>
+                      </div>
+                    </div>
+
+                    {/* Line items */}
+                    {analysisResult.lineItems?.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">Charges Breakdown</h4>
+                        <div className="space-y-3">
+                          {analysisResult.lineItems.map((item: any, i: number) => {
+                            const style = ASSESSMENT_STYLES[item.analysis?.assessment] || ASSESSMENT_STYLES.fair;
+                            return (
+                              <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div>
+                                    <p className="font-bold text-sm">
+                                      {item.description}
+                                      {item.cptCode && <span className="text-gray-400 font-medium ml-1">({item.cptCode})</span>}
+                                    </p>
+                                  </div>
+                                  <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-black uppercase ${style.bg} ${style.text}`}>
+                                    {style.label}
+                                  </span>
+                                </div>
+                                <div className="flex gap-6 text-sm">
+                                  <div>
+                                    <span className="text-gray-400">Billed: </span>
+                                    <span className="font-bold">{formatMoney(item.billedAmount)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Fair: </span>
+                                    <span className="font-bold">
+                                      {formatMoney(item.referencePricing?.fairPriceRange?.low)} — {formatMoney(item.referencePricing?.fairPriceRange?.high)}
+                                    </span>
+                                  </div>
+                                </div>
+                                {item.analysis?.reasoning && (
+                                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">{item.analysis.reasoning}</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Explanation */}
+                    {analysisResult.explanation && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">What This Means</h4>
+                        <p className="text-gray-600 leading-relaxed">{analysisResult.explanation}</p>
+                      </div>
+                    )}
+
+                    {/* Call Script */}
+                    {analysisResult.callScript && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">What To Say When You Call</h4>
+                        <div className="relative p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap pr-10">{analysisResult.callScript}</p>
+                          <button
+                            onClick={() => handleCopyScript(analysisResult.callScript)}
+                            className="absolute top-4 right-4 p-2 rounded-xl hover:bg-gray-200 transition-colors"
+                            title="Copy script"
+                          >
+                            {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} className="text-gray-400" />}
+                          </button>
+                          {copied && (
+                            <p className="text-xs text-green-600 font-bold mt-2">Copied!</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Negotiation Script */}
+                    {analysisResult.negotiationScript && (
+                      <div>
+                        <h4 className="text-lg font-display font-bold mb-4">Negotiation Script</h4>
+                        <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{analysisResult.negotiationScript}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
