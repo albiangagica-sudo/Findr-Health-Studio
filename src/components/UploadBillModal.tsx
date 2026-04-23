@@ -66,13 +66,13 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
             const data = await pollRes.json();
 
-            if (data.status === 'complete' || data.status === 'completed') {
+            if (data.bill?.status === 'complete' || data.bill?.status === 'completed') {
               clearInterval(interval);
               clearTimeout(timeout);
-              setAnalysisResult(data);
+              setAnalysisResult(data.bill);
               setStatus('success');
               resolve();
-            } else if (data.status === 'failed') {
+            } else if (data.bill?.status === 'failed') {
               clearInterval(interval);
               clearTimeout(timeout);
               reject(new Error('Analysis failed'));
