@@ -107,11 +107,11 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setTimeout(reset, 300); // Reset after animation
   };
 
-  const overchargedItems = analysisResult?.aiAnalysis?.lineItems?.filter(
+  const overchargedItems = analysisResult?.lineItems?.filter(
     (item: any) => item.overchargeAmount > 0
   ) ?? [];
 
-  const potentialSavings = analysisResult?.aiAnalysis?.potentialSavings
+  const potentialSavings = analysisResult?.potentialSavings
     ?? overchargedItems.reduce((sum: number, item: any) => sum + item.overchargeAmount, 0);
 
   return (
@@ -222,9 +222,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <CheckCircle2 size={48} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis Complete!</h3>
-                    {analysisResult?.aiAnalysis?.providerName && (
+                    {analysisResult?.provider?.providerName && (
                       <p className="text-gray-500 font-medium mb-4">
-                        {analysisResult.aiAnalysis.providerName} — {analysisResult.aiAnalysis.documentType}
+                        {analysisResult.provider.providerName} — {analysisResult.provider.documentType}
                       </p>
                     )}
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-8 w-full text-left">
