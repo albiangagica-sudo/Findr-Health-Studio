@@ -151,30 +151,29 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       : '';
     const generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const assessmentColor = (assessment: string) => {
-      switch (assessment) {
-        case 'fair': return '#16a34a';
-        case 'high': return '#d97706';
-        case 'very_high': return '#ea580c';
-        case 'extreme': return '#dc2626';
-        default: return '#6b7280';
-      }
+    const assessmentBadge = (assessment: string) => {
+      const styles: Record<string, { bg: string; color: string; label: string }> = {
+        fair: { bg: '#D1FAE5', color: '#059669', label: 'Fair' },
+        high: { bg: '#FEF3C7', color: '#D97706', label: 'High' },
+        very_high: { bg: '#FED7AA', color: '#EA580C', label: 'Very High' },
+        extreme: { bg: '#FEE2E2', color: '#DC2626', label: 'Extreme' },
+      };
+      const s = styles[assessment] || styles.fair;
+      return `<span style="display: inline-block; padding: 3px 12px; border-radius: 999px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: ${s.color}; background: ${s.bg};">${s.label}</span>`;
     };
 
     const lineItemRows = (analysisResult?.lineItems || []).map((item: any, i: number) => {
-      const style = ASSESSMENT_STYLES[item.analysis?.assessment] || ASSESSMENT_STYLES.fair;
-      const color = assessmentColor(item.analysis?.assessment);
       return `
-        <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px;">
+        <tr style="background: ${i % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #141414;">
             ${item.description}
-            ${item.analysis?.reasoning ? `<br><span style="color: #9ca3af; font-size: 11px;">${item.analysis.reasoning}</span>` : ''}
+            ${item.analysis?.reasoning ? `<br><span style="font-size: 11px; color: #94A3B8;">${item.analysis.reasoning}</span>` : ''}
           </td>
-          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: center; color: #6b7280;">${item.cptCode || '—'}</td>
-          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; font-weight: 600;">${formatMoney(item.billedAmount)}</td>
-          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; color: #6b7280;">${formatMoney(item.referencePricing?.fairPriceRange?.low)} — ${formatMoney(item.referencePricing?.fairPriceRange?.high)}</td>
-          <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-            <span style="display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; color: ${color}; background: ${color}15;">${style.label}</span>
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; text-align: center; color: #64748B;">${item.cptCode || '—'}</td>
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; text-align: right; font-weight: 600; color: #141414;">${formatMoney(item.billedAmount)}</td>
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; font-size: 13px; text-align: right; color: #64748B;">${formatMoney(item.referencePricing?.fairPriceRange?.low)} — ${formatMoney(item.referencePricing?.fairPriceRange?.high)}</td>
+          <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+            ${assessmentBadge(item.analysis?.assessment)}
           </td>
         </tr>`;
     }).join('');
@@ -184,49 +183,52 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 <head>
   <meta charset="utf-8">
   <title>Findr Analysis - ${providerName}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; }
+    body { font-family: 'Inter', sans-serif; color: #141414; line-height: 1.6; max-width: 800px; margin: 0 auto; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <div style="background: #1a1a2e; color: white; padding: 40px 48px;">
-    <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Findr Health</div>
-    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-top: 4px;">Document Analysis Report</div>
+  <div style="background: #2E5BFF; color: white; padding: 40px 48px;">
+    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em;">findr</div>
+    <div style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: #D4FF59; margin-top: 6px;">Document Analysis Report</div>
   </div>
 
   <div style="padding: 40px 48px;">
     <!-- Provider Info -->
     <div style="margin-bottom: 32px;">
-      <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">${providerName}</div>
-      <div style="font-size: 14px; color: #6b7280;">${documentTypeLabel}${serviceDate ? ` &middot; ${serviceDate}` : ''}</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: #141414; margin-bottom: 4px;">${providerName}</div>
+      <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #64748B;">${documentTypeLabel}${serviceDate ? ` &middot; ${serviceDate}` : ''}</div>
     </div>
 
     ${provider?.verdictMessage ? `
-    <div style="padding: 16px 20px; border-radius: 12px; margin-bottom: 32px; font-size: 14px; font-weight: 600; ${isOvercharged ? 'background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;' : 'background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;'}">
+    <div style="padding: 16px 20px; border-radius: 12px; margin-bottom: 32px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; ${isOvercharged ? 'background: #FEE2E2; color: #DC2626; border-left: 4px solid #EF4444;' : 'background: #D1FAE5; color: #059669; border-left: 4px solid #10B981;'}">
       ${provider.verdictMessage}
     </div>` : ''}
 
     <!-- Summary -->
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 36px;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 8px; margin-bottom: 36px;">
       <tr>
-        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px 0 0 8px;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Total Billed</div>
-          <div style="font-size: 22px; font-weight: 700;">${formatMoney(analysisResult?.totalBilled)}</div>
+        <td style="width: 25%; padding: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; margin-bottom: 8px;">Total Billed</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #141414;">${formatMoney(analysisResult?.totalBilled)}</div>
         </td>
-        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Fair Market</div>
-          <div style="font-size: 22px; font-weight: 700;">${formatMoney(provider?.totalEstimatedFair)}</div>
+        <td style="width: 25%; padding: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; margin-bottom: 8px;">Fair Market</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #141414;">${formatMoney(provider?.totalEstimatedFair)}</div>
         </td>
-        <td style="width: 25%; padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; font-weight: 700; margin-bottom: 6px;">Your Responsibility</div>
-          <div style="font-size: 22px; font-weight: 700;">${formatMoney(provider?.patientResponsibility)}</div>
+        <td style="width: 25%; padding: 24px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; margin-bottom: 8px;">Your Responsibility</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #141414;">${formatMoney(provider?.patientResponsibility)}</div>
         </td>
-        <td style="width: 25%; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0 8px 8px 0;">
-          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #16a34a; font-weight: 700; margin-bottom: 6px;">Potential Savings</div>
-          <div style="font-size: 22px; font-weight: 700; color: #16a34a;">${formatMoney(potentialSavings)}</div>
+        <td style="width: 25%; padding: 24px; background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 16px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #2E5BFF; font-weight: 700; margin-bottom: 8px;">Potential Savings</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; color: #2E5BFF;">${formatMoney(potentialSavings)}</div>
         </td>
       </tr>
     </table>
@@ -234,15 +236,15 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     ${analysisResult?.lineItems?.length ? `
     <!-- Charges Breakdown -->
     <div style="margin-bottom: 36px;">
-      <div style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Charges Breakdown</div>
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 16px;">Charges Breakdown</div>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden;">
         <thead>
-          <tr style="background: #f3f4f6;">
-            <th style="padding: 10px 16px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Service</th>
-            <th style="padding: 10px 16px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">CPT</th>
-            <th style="padding: 10px 16px; text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Billed</th>
-            <th style="padding: 10px 16px; text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Fair Range</th>
-            <th style="padding: 10px 16px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb;">Assessment</th>
+          <tr style="background: #F8FAFC;">
+            <th style="padding: 12px 16px; text-align: left; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Service</th>
+            <th style="padding: 12px 16px; text-align: center; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">CPT</th>
+            <th style="padding: 12px 16px; text-align: right; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Billed</th>
+            <th style="padding: 12px 16px; text-align: right; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Fair Range</th>
+            <th style="padding: 12px 16px; text-align: center; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #64748B; font-weight: 700; border-bottom: 2px solid #E2E8F0;">Assessment</th>
           </tr>
         </thead>
         <tbody>${lineItemRows}</tbody>
@@ -252,27 +254,27 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     ${analysisResult?.explanation ? `
     <!-- Explanation -->
     <div style="margin-bottom: 36px;">
-      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">What This Means</div>
-      <div style="font-size: 14px; color: #374151; line-height: 1.7; padding: 20px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">${analysisResult.explanation}</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">What This Means</div>
+      <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #F8FAFC; border-radius: 12px; border: 1px solid #E2E8F0;">${analysisResult.explanation}</div>
     </div>` : ''}
 
     ${analysisResult?.callScript ? `
     <!-- Call Script -->
     <div style="margin-bottom: 36px;">
-      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">What To Say When You Call</div>
-      <div style="font-size: 13px; color: #374151; line-height: 1.7; padding: 20px; background: #fffbeb; border-radius: 12px; border: 1px solid #fde68a; white-space: pre-wrap;">${analysisResult.callScript}</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">What To Say When You Call</div>
+      <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #FFFBEB; border-radius: 12px; border: 1px solid #FDE68A; white-space: pre-wrap;">${analysisResult.callScript}</div>
     </div>` : ''}
 
     ${analysisResult?.negotiationScript ? `
     <!-- Negotiation Script -->
     <div style="margin-bottom: 36px;">
-      <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Negotiation Script</div>
-      <div style="font-size: 13px; color: #374151; line-height: 1.7; padding: 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; white-space: pre-wrap;">${analysisResult.negotiationScript}</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: #2E5BFF; margin-bottom: 12px;">Negotiation Script</div>
+      <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: #374151; line-height: 1.7; padding: 24px; background: #F0FDF4; border-radius: 12px; border: 1px solid #BBF7D0; white-space: pre-wrap;">${analysisResult.negotiationScript}</div>
     </div>` : ''}
   </div>
 
   <!-- Footer -->
-  <div style="padding: 24px 48px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 11px; display: flex; justify-content: space-between;">
+  <div style="padding: 24px 48px; border-top: 1px solid #E2E8F0; font-family: 'Inter', sans-serif; color: #94A3B8; font-size: 11px; font-weight: 400; display: flex; justify-content: space-between;">
     <span>Generated by Findr Health &mdash; findrhealth.com</span>
     <span>${generatedDate}</span>
   </div>
