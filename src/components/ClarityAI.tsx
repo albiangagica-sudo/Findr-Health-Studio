@@ -61,7 +61,7 @@ export default function ClarityAI() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
+              onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110]"
             />
             <motion.aside
@@ -81,9 +81,9 @@ export default function ClarityAI() {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Advanced Billing Intel</p>
                    </div>
                  </div>
-                 <button 
-                   onClick={() => setIsOpen(false)}
-                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                 <button
+                   onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                   className="p-3 hover:bg-gray-100 rounded-full transition-colors z-50"
                  >
                     <X size={24} />
                  </button>
