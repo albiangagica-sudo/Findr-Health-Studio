@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Link as RouteLink } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import BillAnalysis from './components/BillAnalysis';
 import HealthBlog from './components/HealthBlog';
@@ -285,5 +285,4 @@ export default function App() {
   );
 }
 
-import { Link as RouteLink } from 'react-router-dom';
 
