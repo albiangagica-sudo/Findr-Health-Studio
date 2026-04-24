@@ -4,11 +4,11 @@ import { Activity, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const CLAIMS = [
-  { id: '#FL-44021', type: 'Duplicate Charge', amount: '$842.10', status: 'Error Flagged', color: 'bg-red-50 text-red-500' },
-  { id: '#FL-82103', type: 'Coding Discrepancy', amount: '$1,240.50', status: 'Compliance Gap', color: 'bg-orange-50 text-orange-500' },
-  { id: '#FL-22918', type: 'Unbundled Services', amount: '$415.00', status: 'Savings Found', color: 'bg-findr-light text-findr' },
-  { id: '#FL-90210', type: 'Overpriced Procedure', amount: '$2,890.30', status: 'Major Recovery', color: 'bg-purple-50 text-purple-600' },
-  { id: '#FL-11504', type: 'Wrongful Denial', amount: '$3,120.00', status: 'Appealing...', color: 'bg-blue-50 text-blue-500' }
+  { id: 'ER Visit', type: 'St. Vincent Healthcare', amount: '$2,900', status: 'Overcharged', color: 'bg-red-50 text-red-500' },
+  { id: 'Lab Work', type: 'Bozeman Health', amount: '$495', status: '6 Items Flagged', color: 'bg-orange-50 text-orange-500' },
+  { id: 'Insurance EOB', type: 'BCBS Montana', amount: '$494', status: 'Savings Found', color: 'bg-findr-light text-findr' },
+  { id: 'Knee MRI', type: 'Yellowstone Orthopedics', amount: '$2,220', status: '9.7x Medicare', color: 'bg-purple-50 text-purple-600' },
+  { id: 'Denied Claim', type: 'Aetna PPO', amount: '$3,120', status: 'Action Needed', color: 'bg-blue-50 text-blue-500' }
 ];
 
 export function RotatingClaimCard() {
@@ -71,7 +71,7 @@ export function RotatingClaimCard() {
                   <Activity size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Medical Claim</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Document Analyzed</p>
                   <p className="text-sm font-bold text-black">{claim.id}</p>
                 </div>
               </div>
@@ -82,7 +82,7 @@ export function RotatingClaimCard() {
 
             <div className="space-y-4 mb-8">
               <div className="flex items-center justify-between">
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Analysis Type</div>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Provider</div>
                 <div className="text-xs font-bold text-black px-2 py-1 bg-gray-50 rounded-lg border border-gray-100">{claim.type}</div>
               </div>
               <div className="flex flex-col gap-2">
