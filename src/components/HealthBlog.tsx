@@ -23,7 +23,7 @@ export default function HealthBlog() {
       excerpt: "'What is your prompt-pay discount?' These five words have saved Findr users thousands. Here's why they work every time.",
       category: "Savings Playbook",
       readTime: "5 min",
-      image: "https://images.unsplash.com/photo-1454165833767-131438967469?auto=format&fit=crop&q=80&w=800"
+      image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800"
     }
   ];
 
