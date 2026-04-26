@@ -145,7 +145,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
   const handleDownloadReport = () => {
     if (verdictType === 'non_healthcare' || verdictType === 'timeout') return;
-    const provider = analysisResult?.provider;
+    const provider = analysisResult?.summary;
     const providerName = provider?.providerName || 'Unknown Provider';
     const serviceDate = provider?.serviceDate
       ? new Date(provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -333,11 +333,11 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const potentialSavings = analysisResult?.potentialSavings
     ?? overchargedItems.reduce((sum: number, item: any) => sum + (item.billedAmount - (item.referencePricing?.fairPriceRange?.high || 0)), 0);
 
-  const documentTypeLabel = DOCUMENT_TYPE_LABELS[analysisResult?.provider?.documentType] || analysisResult?.provider?.documentType || 'Medical Document';
+  const documentTypeLabel = DOCUMENT_TYPE_LABELS[analysisResult?.summary?.documentType] || analysisResult?.summary?.documentType || 'Medical Document';
 
   const isOvercharged = potentialSavings > 0 || overchargedItems.length > 0;
 
-  const verdictType = analysisResult?.provider?.verdictType;
+  const verdictType = analysisResult?.summary?.verdictType;
 
   return (
     <AnimatePresence>
@@ -450,9 +450,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <AlertCircle size={32} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">This isn't a medical document</h3>
-                    {analysisResult?.provider?.verdictMessage && (
+                    {analysisResult?.summary?.verdictMessage && (
                       <p className="text-gray-500 font-medium mb-8 max-w-sm">
-                        {analysisResult.provider.verdictMessage}
+                        {analysisResult.summary.verdictMessage}
                       </p>
                     )}
                     <button
@@ -475,9 +475,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <Clock size={32} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis took too long</h3>
-                    {analysisResult?.provider?.verdictMessage && (
+                    {analysisResult?.summary?.verdictMessage && (
                       <p className="text-gray-500 font-medium mb-8 max-w-sm">
-                        {analysisResult.provider.verdictMessage}
+                        {analysisResult.summary.verdictMessage}
                       </p>
                     )}
                     <button
@@ -500,14 +500,14 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <CheckCircle2 size={40} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">You're all paid up!</h3>
-                    {analysisResult?.provider?.verdictMessage && (
+                    {analysisResult?.summary?.verdictMessage && (
                       <p className="text-gray-500 font-medium mb-2 max-w-sm">
-                        {analysisResult.provider.verdictMessage}
+                        {analysisResult.summary.verdictMessage}
                       </p>
                     )}
-                    {analysisResult?.provider?.providerName && (
+                    {analysisResult?.summary?.providerName && (
                       <p className="text-gray-400 text-sm mb-8">
-                        From {analysisResult.provider.providerName}
+                        From {analysisResult.summary.providerName}
                       </p>
                     )}
                     <div className="flex flex-col gap-3 w-full">
@@ -535,9 +535,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <CheckCircle2 size={32} />
                     </motion.div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis Complete!</h3>
-                    {analysisResult?.provider?.providerName && (
+                    {analysisResult?.summary?.providerName && (
                       <p className="text-gray-500 font-medium mb-4">
-                        {analysisResult.provider.providerName} — {documentTypeLabel}
+                        {analysisResult.summary.providerName} — {documentTypeLabel}
                       </p>
                     )}
                     <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-8 w-full text-left">
@@ -567,9 +567,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <AlertCircle size={32} />
                     </div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">This isn't a medical document</h3>
-                    {analysisResult?.provider?.verdictMessage && (
+                    {analysisResult?.summary?.verdictMessage && (
                       <p className="text-gray-500 font-medium mb-8 max-w-sm">
-                        {analysisResult.provider.verdictMessage}
+                        {analysisResult.summary.verdictMessage}
                       </p>
                     )}
                     <button
@@ -588,9 +588,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <Clock size={32} />
                     </div>
                     <h3 className="text-3xl font-display font-bold mb-2 tracking-tight">Analysis took too long</h3>
-                    {analysisResult?.provider?.verdictMessage && (
+                    {analysisResult?.summary?.verdictMessage && (
                       <p className="text-gray-500 font-medium mb-8 max-w-sm">
-                        {analysisResult.provider.verdictMessage}
+                        {analysisResult.summary.verdictMessage}
                       </p>
                     )}
                     <button
@@ -616,17 +616,17 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                     {/* Provider header */}
                     <div>
                       <h3 className="text-2xl font-display font-bold tracking-tight">
-                        {analysisResult.provider?.providerName || 'Unknown Provider'}
+                        {analysisResult.summary?.providerName || 'Unknown Provider'}
                       </h3>
                       <p className="text-gray-400 font-medium text-sm mt-1">{documentTypeLabel}</p>
-                      {analysisResult.provider?.serviceDate && (
+                      {analysisResult.summary?.serviceDate && (
                         <p className="text-gray-400 text-sm mt-1">
-                          Service Date: {new Date(analysisResult.provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          Service Date: {new Date(analysisResult.summary.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                       )}
-                      {analysisResult.provider?.verdictMessage && (
+                      {analysisResult.summary?.verdictMessage && (
                         <div className="mt-4 p-4 rounded-2xl text-sm font-bold bg-green-50 text-green-700">
-                          {analysisResult.provider.verdictMessage}
+                          {analysisResult.summary.verdictMessage}
                         </div>
                       )}
                     </div>
@@ -693,17 +693,17 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                     {/* Provider header */}
                     <div>
                       <h3 className="text-2xl font-display font-bold tracking-tight">
-                        {analysisResult.provider?.providerName || 'Unknown Provider'}
+                        {analysisResult.summary?.providerName || 'Unknown Provider'}
                       </h3>
                       <p className="text-gray-400 font-medium text-sm mt-1">{documentTypeLabel}</p>
-                      {analysisResult.provider?.serviceDate && (
+                      {analysisResult.summary?.serviceDate && (
                         <p className="text-gray-400 text-sm mt-1">
-                          Service Date: {new Date(analysisResult.provider.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          Service Date: {new Date(analysisResult.summary.serviceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                       )}
-                      {analysisResult.provider?.verdictMessage && (
+                      {analysisResult.summary?.verdictMessage && (
                         <div className={`mt-4 p-4 rounded-2xl text-sm font-bold ${isOvercharged ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                          {analysisResult.provider.verdictMessage}
+                          {analysisResult.summary.verdictMessage}
                         </div>
                       )}
                     </div>
@@ -716,11 +716,11 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       </div>
                       <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Fair Market</p>
-                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.provider?.totalEstimatedFair)}</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.summary?.totalEstimatedFair)}</p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Your Responsibility</p>
-                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.provider?.patientResponsibility)}</p>
+                        <p className="text-xl font-display font-bold">{formatMoney(analysisResult.summary?.patientResponsibility)}</p>
                       </div>
                       <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
                         <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Potential Savings</p>
