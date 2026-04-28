@@ -28,14 +28,22 @@ export default function ClarityAI() {
 
     const handleOpenClarity = () => setIsOpen(true);
 
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('open-clarity', handleOpenClarity);
+    window.addEventListener('keydown', handleEscape);
 
     handleScroll();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('open-clarity', handleOpenClarity);
+      window.removeEventListener('keydown', handleEscape);
     };
   }, [location.pathname]);
 
@@ -106,14 +114,14 @@ export default function ClarityAI() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9990]"
             />
             <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[120] shadow-2xl flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[9999] shadow-2xl flex flex-col"
             >
               <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-white relative z-10">
                  <div className="flex items-center gap-3">
