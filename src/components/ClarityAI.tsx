@@ -1,21 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, X, Send, MessageSquare } from 'lucide-react';
+import { Sparkles, X, Send, MessageSquare, ArrowRight } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+
+const CLARITY_API_URL = 'https://fearless-achievement-production.up.railway.app/api/clarity/chat';
+
+type ChatMsg = { role: 'user' | 'assistant'; content: string };
 
 export default function ClarityAI() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const location = useLocation();
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       if (location.pathname === '/') {
-        // On home page, show after scroll
         setIsVisible(window.scrollY > 400);
       } else {
-        // On other pages, always show
         setIsVisible(true);
       }
     };
@@ -24,8 +30,7 @@ export default function ClarityAI() {
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('open-clarity', handleOpenClarity);
-    
-    // Initial check
+
     handleScroll();
 
     return () => {
@@ -33,6 +38,45 @@ export default function ClarityAI() {
       window.removeEventListener('open-clarity', handleOpenClarity);
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
+  async function sendMessage(text: string) {
+    const trimmed = text?.trim();
+    if (!trimmed || isLoading) return;
+
+    const userMsg: ChatMsg = { role: 'user', content: trimmed };
+    const conversationHistory = messages.map(m => ({ role: m.role, content: m.content }));
+
+    setMessages(prev => [...prev, userMsg]);
+    setChatMessage('');
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(CLARITY_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed, conversationHistory }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const assistantContent = data?.message || "Sorry, I didn't get a response. Try again?";
+
+      setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
+    } catch (err) {
+      console.error('[Clarity] sendMessage error:', err);
+      setError("Something went wrong. Try again?");
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <>
@@ -57,7 +101,7 @@ export default function ClarityAI() {
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -89,45 +133,97 @@ export default function ClarityAI() {
                  </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-[#FBFBFE]">
-                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <p className="text-gray-700 font-medium leading-relaxed">
-                       Hello! I'm <span className="text-findr font-bold">Clarity</span>. I can help you explain specific bills, find cheaper local care, or even book your next appointment. What's on your mind?
-                    </p>
-                 </div>
+              <div className="flex-1 overflow-y-auto p-8 space-y-4 bg-[#FBFBFE]" ref={messagesContainerRef}>
+                 {messages.length === 0 ? (
+                   <>
+                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                        <p className="text-gray-700 font-medium leading-relaxed">
+                           Hello! I'm <span className="text-findr font-bold">Clarity</span>. I can help you explain specific bills, find cheaper local care, or even book your next appointment. What's on your mind?
+                        </p>
+                     </div>
 
-                 <div className="space-y-4">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suggested Actions</p>
-                    <div className="grid grid-cols-1 gap-3">
-                       {[
-                         "Explain my recent bill",
-                         "Find a nearby dentist",
-                         "How can I save on meds?",
-                         "Book a wellness checkup"
-                       ].map(q => (
-                         <button 
-                           key={q}
-                           onClick={() => setChatMessage(q)}
-                           className="text-left px-5 py-4 bg-white hover:border-findr hover:shadow-lg border border-gray-100 rounded-2xl text-sm font-bold transition-all transition-shadow group/item flex items-center justify-between"
-                         >
-                           {q}
-                           <ArrowRight size={14} className="opacity-0 group-hover/item:opacity-100 transition-opacity text-findr" />
-                         </button>
-                       ))}
-                    </div>
-                 </div>
+                     <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suggested Actions</p>
+                        <div className="grid grid-cols-1 gap-3">
+                           {[
+                             "Explain my recent bill",
+                             "Find a nearby dentist",
+                             "How can I save on meds?",
+                             "Book a wellness checkup"
+                           ].map(q => (
+                             <button
+                               key={q}
+                               onClick={() => sendMessage(q)}
+                               className="text-left px-5 py-4 bg-white hover:border-findr hover:shadow-lg border border-gray-100 rounded-2xl text-sm font-bold transition-all transition-shadow group/item flex items-center justify-between"
+                             >
+                               {q}
+                               <ArrowRight size={14} className="opacity-0 group-hover/item:opacity-100 transition-opacity text-findr" />
+                             </button>
+                           ))}
+                        </div>
+                     </div>
+                   </>
+                 ) : (
+                   <>
+                     {messages.map((msg, idx) => (
+                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                         <div className={
+                           msg.role === 'user'
+                             ? "max-w-[85%] bg-black text-white p-5 rounded-3xl rounded-br-md font-medium leading-relaxed"
+                             : "max-w-[85%] bg-white text-gray-700 p-5 rounded-3xl rounded-bl-md border border-gray-100 shadow-sm font-medium leading-relaxed"
+                         }>
+                           {msg.content}
+                         </div>
+                       </div>
+                     ))}
+                     {isLoading && (
+                       <div className="flex justify-start">
+                         <div className="max-w-[85%] bg-white text-gray-400 p-5 rounded-3xl rounded-bl-md border border-gray-100 shadow-sm font-medium italic">
+                           Clarity is thinking…
+                         </div>
+                       </div>
+                     )}
+                     {error && (
+                       <div className="flex justify-start">
+                         <div className="max-w-[85%] bg-red-50 text-red-700 p-5 rounded-3xl rounded-bl-md border border-red-100 font-medium">
+                           {error}
+                           <button
+                             onClick={() => {
+                               const lastUser = [...messages].reverse().find(m => m.role === 'user');
+                               if (lastUser) sendMessage(lastUser.content);
+                             }}
+                             className="block mt-2 underline text-sm"
+                           >
+                             Try again
+                           </button>
+                         </div>
+                       </div>
+                     )}
+                   </>
+                 )}
               </div>
 
               <div className="p-8 bg-white border-t border-gray-100">
                  <div className="relative">
-                    <input 
+                    <input
                       type="text"
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage(chatMessage);
+                        }
+                      }}
                       placeholder="Ask Clarity anything..."
+                      disabled={isLoading}
                       className="w-full pl-6 pr-14 py-5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-zest/20 font-medium transition-all"
                     />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-findr transition-colors">
+                    <button
+                      onClick={() => sendMessage(chatMessage)}
+                      disabled={!chatMessage.trim() || isLoading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-findr transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
                        <Send size={18} />
                     </button>
                  </div>
@@ -142,5 +238,3 @@ export default function ClarityAI() {
     </>
   );
 }
-
-import { ArrowRight } from 'lucide-react';
