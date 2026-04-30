@@ -376,6 +376,12 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               {/* Content */}
               <div ref={contentRef} className="p-10 overflow-y-auto">
                 {status === 'idle' && (
+                  <>
+                  <div className="bg-amber-50 border-l-4 border-amber-300 px-5 py-4 rounded-2xl mb-6">
+                    <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                      One document at a time, please. Combining multiple documents gives me a headache.
+                    </p>
+                  </div>
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-4 border-dashed border-gray-100 rounded-[2.5rem] p-16 flex flex-col items-center justify-center gap-6 cursor-pointer hover:border-findr/30 hover:bg-findr-light/10 transition-all group"
@@ -397,6 +403,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                        <p className="text-sm text-gray-400 font-medium tracking-tight">Supports PDF, JPG, PNG (Max 10MB)</p>
                     </div>
                   </div>
+                  </>
                 )}
 
                 {(status === 'uploading' || status === 'analyzing') && (
