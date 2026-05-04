@@ -15,7 +15,6 @@ import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Logo as BrandLogo } from './components/Logo';
-import LockedGate from './components/LockedGate';
 import ClarityAISection from './components/ClarityAISection';
 
 function LandingSections() {
@@ -193,7 +192,6 @@ export default function App() {
   }, [location.pathname]);
 
   return (
-    <LockedGate>
       <div className={`min-h-screen transition-colors duration-500 ${location.pathname === '/enterprise' ? 'bg-black' : 'bg-[#FBFBFE]'} text-black font-sans selection:bg-findr/30 selection:text-black`}>
         <Navbar onUploadClick={() => setIsUploadOpen(true)} />
         <ClarityAI />
@@ -281,7 +279,6 @@ export default function App() {
            </div>
         </footer>
       </div>
-    </LockedGate>
   );
 }
 
