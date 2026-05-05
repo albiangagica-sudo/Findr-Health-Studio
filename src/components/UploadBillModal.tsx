@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock, Sparkles } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -47,6 +47,9 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   // Verification state (Phase 2 step 2c.1c)
   const [verificationAnswers, setVerificationAnswers] = useState<Map<string, 'confirmed' | 'flagged'>>(new Map());
   const [verificationError, setVerificationError] = useState<string | null>(null);
+
+  // Document type explainer expanded state (Phase 2 Phase A)
+  const [explainerExpanded, setExplainerExpanded] = useState(false);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -317,6 +320,11 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     };
   }, [isOpen]);
 
+  // Reset explainer to collapsed when the document type changes (Phase 2 Phase A)
+  useEffect(() => {
+    setExplainerExpanded(false);
+  }, [analysisResult?.documentTypeInfo?.type]);
+
   const handleDownloadReport = () => {
     if (verdictType === 'non_healthcare' || verdictType === 'timeout') return;
     const provider = analysisResult?.summary;
@@ -549,6 +557,73 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
               {/* Content */}
               <div ref={contentRef} className="p-10 overflow-y-auto">
+                {/* Document type explainer (Phase 2 Phase A) */}
+                {analysisResult?.documentTypeInfo &&
+                 ['success', 'details', 'eob_verification', 'eob_processing', 'eob_output', 'eob_confirmed', 'eob_deferred'].includes(status) && (() => {
+                  const info = analysisResult.documentTypeInfo;
+                  const explainer = info.explainer || {};
+                  const whatToLookFor = Array.isArray(explainer.whatToLookFor) ? explainer.whatToLookFor : [];
+                  const hasExpandableContent = explainer.keyDistinction || whatToLookFor.length > 0 || explainer.commonMisunderstanding;
+
+                  return (
+                    <div className="mx-8 my-6 p-6 bg-gray-50 rounded-3xl">
+                      {/* Always visible: displayName + whatItIs */}
+                      <h3 className="text-xl font-display font-bold mb-3 leading-tight">{info.displayName}</h3>
+                      {explainer.whatItIs && (
+                        <p className="text-sm text-gray-700 leading-relaxed">{explainer.whatItIs}</p>
+                      )}
+
+                      {/* Show More / Less toggle */}
+                      {hasExpandableContent && (
+                        <button
+                          onClick={() => setExplainerExpanded(!explainerExpanded)}
+                          className="mt-4 -mx-2 px-2 py-2 inline-flex items-center gap-1.5 text-xs font-bold text-findr hover:text-black transition-colors rounded-lg"
+                          aria-expanded={explainerExpanded}
+                        >
+                          {explainerExpanded ? 'Less' : 'More'}
+                          {explainerExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+                      )}
+
+                      {/* Expanded content */}
+                      {explainerExpanded && (
+                        <div className="mt-5 space-y-5 border-t border-gray-200 pt-5">
+                          {/* HEADS UP — keyDistinction */}
+                          {explainer.keyDistinction && (
+                            <div>
+                              <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Heads Up</div>
+                              <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">{explainer.keyDistinction}</p>
+                            </div>
+                          )}
+
+                          {/* WHAT TO FLAG — whatToLookFor */}
+                          {whatToLookFor.length > 0 && (
+                            <div>
+                              <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">What To Flag</div>
+                              <ul className="space-y-2">
+                                {whatToLookFor.map((item: string, i: number) => (
+                                  <li key={i} className="flex gap-3 text-sm text-gray-700 leading-relaxed">
+                                    <span className="text-findr font-bold flex-shrink-0">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* WHERE THEY GET YOU — commonMisunderstanding */}
+                          {explainer.commonMisunderstanding && (
+                            <div>
+                              <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Where They Get You</div>
+                              <p className="text-sm text-gray-700 leading-relaxed">{explainer.commonMisunderstanding}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {status === 'idle' && (
                   <>
                   <div className="bg-amber-50 border-l-4 border-amber-300 px-5 py-4 rounded-2xl mb-6">
