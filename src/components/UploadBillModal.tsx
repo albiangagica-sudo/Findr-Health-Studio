@@ -39,6 +39,8 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
   const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error' | 'details' | 'eob_verification' | 'eob_processing' | 'eob_output' | 'eob_confirmed' | 'eob_deferred'>('idle');
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  // Copy state for verification script pieces (Phase 2 step 2c.1c Commit C2)
+  const [copiedVerificationScriptKey, setCopiedVerificationScriptKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +163,31 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       console.error('[Verification] Submit error:', err);
       setVerificationError('Something went wrong. Try again.');
     }
+  }
+
+  // Convert audience enum to human-readable label.
+  // NOTE: provider_billing and provider_first_then_insurance both render as "Provider Billing"
+  // for the primary call — the secondary handling renders separately via secondaryAudience subtitle.
+  function getAudienceLabel(audience: string | null | undefined): string {
+    switch (audience) {
+      case 'provider_billing': return 'Provider Billing';
+      case 'insurance_member_services': return 'Insurance Member Services';
+      case 'provider_first_then_insurance': return 'Provider Billing';
+      default: return 'Customer Service';
+    }
+  }
+
+  // Copy a verification script piece, show checkmark for 2 seconds
+  function copyVerificationScript(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedVerificationScriptKey(key);
+    setTimeout(() => setCopiedVerificationScriptKey(null), 2000);
+  }
+
+  // Handler for Ask Clarity handoff (closes modal, opens Clarity sidebar)
+  function handleAskClarityFromEOB() {
+    onClose();
+    window.dispatchEvent(new CustomEvent('open-clarity'));
   }
 
   const startAnalysis = useCallback(async (fileToAnalyze?: File) => {
@@ -1079,22 +1106,155 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   </div>
                 )}
 
-                {status === 'eob_output' && analysisResult?.verificationOutput && (
-                  <div className="p-8 space-y-6">
-                    <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Sparkles className="text-findr" size={20} />
-                        <h3 className="font-display font-bold text-base">Your call script is ready</h3>
+                {status === 'eob_output' && analysisResult?.verificationOutput && (() => {
+                  const vo = analysisResult.verificationOutput;
+                  const audienceLabel = getAudienceLabel(vo.audience);
+                  const secondaryLabel = vo.secondaryAudience ? getAudienceLabel(vo.secondaryAudience) : null;
+                  const keyFacts = Array.isArray(vo.keyFacts) ? vo.keyFacts : [];
+                  const anticipatedResponses = Array.isArray(vo.anticipatedResponses) ? vo.anticipatedResponses : [];
+                  const contactInfo = vo.contactInfo || {};
+                  const scripts = [
+                    { key: 'opening', label: 'Opening', content: vo.scriptOpening },
+                    { key: 'statement', label: 'The Issue', content: vo.scriptStatement },
+                    { key: 'request', label: 'Your Request', content: vo.scriptRequest },
+                    { key: 'close', label: 'Closing', content: vo.scriptClose },
+                  ].filter(s => s.content);
+
+                  return (
+                    <div className="p-8 space-y-8">
+                      {/* ZONE 1 — Hero */}
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-widest text-findr mb-2">Your Action Plan</div>
+                        <h2 className="text-2xl font-display font-bold mb-4 leading-tight">{vo.primaryConcern || 'Review your EOB'}</h2>
+                        {keyFacts.length > 0 && (
+                          <ul className="space-y-2">
+                            {keyFacts.map((fact: string, i: number) => (
+                              <li key={i} className="flex gap-3 text-sm text-gray-700 leading-relaxed">
+                                <span className="text-findr font-bold flex-shrink-0">•</span>
+                                <span>{fact}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        The detailed call script with what to say, who to call, and how to handle pushback will render here once Commit C2 ships. For now, your verification submitted successfully and the LLM has generated your call package.
-                      </p>
-                      <p className="text-xs text-gray-500 mt-4 font-mono break-words">
-                        Audience: {analysisResult.verificationOutput.audience || 'unknown'} • Primary concern: {(analysisResult.verificationOutput.primaryConcern || '').substring(0, 100)}
-                      </p>
+
+                      {/* ZONE 2 — Contact Card (typography-only, no icons) */}
+                      <div className="bg-zest/20 border-2 border-zest/40 rounded-3xl p-6">
+                        <div className="text-xs font-bold uppercase tracking-widest text-gray-700 mb-2">Who To Call</div>
+                        <h3 className="text-lg font-display font-bold mb-1">{audienceLabel}</h3>
+                        {secondaryLabel && (
+                          <p className="text-xs text-gray-600 mb-3">Then call: {secondaryLabel}</p>
+                        )}
+                        {contactInfo.phoneNumber ? (
+                          <div className="mt-4">
+                            <a
+                              href={`tel:${contactInfo.phoneNumber.replace(/[^\d+]/g, '')}`}
+                              className="inline-block text-3xl font-mono font-bold tracking-wide hover:text-findr transition-colors"
+                            >
+                              {contactInfo.phoneNumber}
+                            </a>
+                            <div className="text-sm text-gray-700 mt-2">
+                              {contactInfo.label}{contactInfo.source ? ` · From ${contactInfo.source}` : ''}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-700 leading-relaxed mt-3">
+                            {contactInfo.fallbackInstruction || "Look on the back of your insurance card or on the bill statement for the right number."}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* ZONE 3 — Your Script */}
+                      {scripts.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-display font-bold mb-4">Your Script</h3>
+                          <div className="space-y-3">
+                            {scripts.map(s => (
+                              <div key={s.key} className="relative p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{s.label}</div>
+                                <p className="text-sm text-gray-800 leading-relaxed pr-12">{s.content}</p>
+                                <button
+                                  onClick={() => copyVerificationScript(s.content as string, s.key)}
+                                  className="absolute top-3 right-3 p-3 rounded-xl hover:bg-gray-200 transition-colors"
+                                  title="Copy"
+                                  aria-label={`Copy ${s.label}`}
+                                >
+                                  {copiedVerificationScriptKey === s.key
+                                    ? <Check size={16} className="text-green-600" />
+                                    : <Copy size={16} className="text-gray-400" />}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ZONE 4 — Want to think it over? (callout) */}
+                      {vo.ifYouNeedTime && (
+                        <div className="bg-amber-50 border-l-4 border-amber-300 rounded-2xl p-5">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock size={18} className="text-amber-700" />
+                            <h4 className="font-display font-bold text-amber-900">Want to think it over?</h4>
+                          </div>
+                          <p className="text-sm text-amber-900 leading-relaxed">{vo.ifYouNeedTime}</p>
+                        </div>
+                      )}
+
+                      {/* ZONE 5 — If they push back */}
+                      {anticipatedResponses.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-display font-bold mb-4">If They Push Back</h3>
+                          <div className="space-y-3">
+                            {anticipatedResponses.map((ar: any, i: number) => (
+                              <div key={i} className="p-5 bg-white border-2 border-gray-100 rounded-2xl">
+                                <div className="mb-3">
+                                  <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">They might say</div>
+                                  <p className="text-sm text-gray-700 leading-relaxed italic">"{ar.whatTheyMightSay}"</p>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-bold uppercase tracking-widest text-findr mb-1">You can say</div>
+                                  <p className="text-sm text-gray-900 leading-relaxed">{ar.yourResponse}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ZONE 6 — Footer (What to Expect + After the Call) */}
+                      {vo.whatToExpect && (
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">What To Expect</div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{vo.whatToExpect}</p>
+                        </div>
+                      )}
+
+                      {vo.postCallSteps && (
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">After The Call</div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{vo.postCallSteps}</p>
+                        </div>
+                      )}
+
+                      {/* Ask Clarity handoff */}
+                      <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Sparkles className="text-findr" size={20} />
+                          <h4 className="font-display font-bold text-base">Have questions about the call?</h4>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                          Open Clarity if you want to dig into specifics, prep for pushback, or figure out next steps after the call.
+                        </p>
+                        <button
+                          onClick={handleAskClarityFromEOB}
+                          className="bg-black text-white rounded-full px-6 py-3 font-bold text-sm flex items-center gap-2 hover:bg-findr transition-colors"
+                        >
+                          Ask Clarity <ArrowRight size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {status === 'eob_confirmed' && analysisResult?.verificationOutput && (
                   <div className="p-8 space-y-6">
@@ -1106,6 +1266,22 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       <p className="text-sm text-green-800 leading-relaxed">
                         {analysisResult.verificationOutput.message || "Looks right. We'll be ready when the bill arrives. Save this EOB. When the bill comes, upload it here and we'll cross-check against this."}
                       </p>
+                    </div>
+
+                    <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Sparkles className="text-findr" size={20} />
+                        <h4 className="font-display font-bold text-base">Have questions about your EOB?</h4>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        Open Clarity if you want to understand what specific charges mean, what your insurance paid, or what happens next.
+                      </p>
+                      <button
+                        onClick={handleAskClarityFromEOB}
+                        className="bg-black text-white rounded-full px-6 py-3 font-bold text-sm flex items-center gap-2 hover:bg-findr transition-colors"
+                      >
+                        Ask Clarity <ArrowRight size={16} />
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1120,6 +1296,22 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       <p className="text-sm text-amber-800 leading-relaxed">
                         {analysisResult.verificationOutput.message || "No rush. When you're ready to review your EOB, come back and we'll pick up where we left off."}
                       </p>
+                    </div>
+
+                    <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Sparkles className="text-findr" size={20} />
+                        <h4 className="font-display font-bold text-base">Have questions about your EOB?</h4>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        Open Clarity if you want to understand what specific charges mean, what your insurance paid, or what happens next.
+                      </p>
+                      <button
+                        onClick={handleAskClarityFromEOB}
+                        className="bg-black text-white rounded-full px-6 py-3 font-bold text-sm flex items-center gap-2 hover:bg-findr transition-colors"
+                      >
+                        Ask Clarity <ArrowRight size={16} />
+                      </button>
                     </div>
                   </div>
                 )}
