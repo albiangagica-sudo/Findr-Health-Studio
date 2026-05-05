@@ -109,7 +109,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
 
   async function handleVerificationSubmit(deferred: boolean) {
     setVerificationError(null);
-    const billId = analysisResult?.billId || analysisResult?.bill?._id || analysisResult?.bill?.id;
+    const billId = analysisResult?._id || analysisResult?.id || analysisResult?.billId || analysisResult?.bill?._id || analysisResult?.bill?.id;
     if (!billId) {
       setVerificationError('Something went wrong — please refresh and try again.');
       return;
