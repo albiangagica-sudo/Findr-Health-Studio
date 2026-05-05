@@ -36,17 +36,132 @@ interface UploadBillModalProps {
 
 export default function UploadBillModal({ isOpen, onClose, initialFile, onFileConsumed }: UploadBillModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error' | 'details'>('idle');
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error' | 'details' | 'eob_verification' | 'eob_processing' | 'eob_output' | 'eob_confirmed' | 'eob_deferred'>('idle');
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Verification state (Phase 2 step 2c.1c)
+  const [verificationAnswers, setVerificationAnswers] = useState<Map<string, 'confirmed' | 'flagged'>>(new Map());
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
+
+  function setAnswerForQuestion(questionId: string, answer: 'confirmed' | 'flagged') {
+    setVerificationAnswers(prev => {
+      const next = new Map(prev);
+      next.set(questionId, answer);
+      return next;
+    });
+  }
+
+  function startPolling(billId: string) {
+    stopPolling();
+
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/bills/${billId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const bill = data.bill || data;
+        const procStatus = bill.verificationProcessingStatus;
+        const vo = bill.verificationOutput;
+
+        if (procStatus === 'complete' && vo?.type === 'flagged') {
+          stopPolling();
+          setAnalysisResult((prev: any) => ({ ...prev, verificationOutput: vo, verificationProcessingStatus: 'complete' }));
+          setStatus('eob_output');
+        } else if (procStatus === 'failed') {
+          stopPolling();
+          setVerificationError(vo?.message || 'Something went wrong generating your call script. Try again.');
+          setStatus('eob_verification');
+        }
+      } catch (err) {
+        console.error('[Verification] Polling error:', err);
+        // Continue polling — transient errors recoverable
+      }
+    }, 2000);
+
+    pollingTimeoutRef.current = setTimeout(() => {
+      stopPolling();
+      setVerificationError('Still processing. Please refresh in a minute.');
+      setStatus('eob_verification');
+    }, 60000);
+  }
+
+  function stopPolling() {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = null;
+    }
+  }
+
+  async function handleVerificationSubmit(deferred: boolean) {
+    setVerificationError(null);
+    const billId = analysisResult?.billId || analysisResult?.bill?._id || analysisResult?.bill?.id;
+    if (!billId) {
+      setVerificationError('Something went wrong — please refresh and try again.');
+      return;
+    }
+
+    // Build responses array from verificationAnswers map
+    const questions = analysisResult?.verificationQuestions || analysisResult?.bill?.verificationQuestions || [];
+    let responses: Array<{ questionId: string; lineItemId: string; status: string }> = [];
+    if (deferred) {
+      responses = [];
+    } else {
+      // Default unanswered questions to 'confirmed'
+      responses = questions.map((q: any) => ({
+        questionId: q.id,
+        lineItemId: q.lineItemId,
+        status: verificationAnswers.get(q.id) || 'confirmed'
+      }));
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/bills/${billId}/verifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responses, deferred })
+      });
+      if (!res.ok) throw new Error(`Submission failed: ${res.status}`);
+      const data = await res.json();
+      const payload = data.payload || data;
+
+      // Update analysisResult with the new verification state
+      setAnalysisResult((prev: any) => ({
+        ...prev,
+        verificationOutput: payload.output,
+        verificationProcessingStatus: payload.status
+      }));
+
+      if (payload.status === 'complete') {
+        const t = payload.output?.type;
+        if (t === 'all_confirmed') setStatus('eob_confirmed');
+        else if (t === 'deferred') setStatus('eob_deferred');
+        else setStatus('eob_output');
+      } else if (payload.status === 'processing') {
+        setStatus('eob_processing');
+        startPolling(billId);
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (err) {
+      console.error('[Verification] Submit error:', err);
+      setVerificationError('Something went wrong. Try again.');
+    }
+  }
 
   const startAnalysis = useCallback(async (fileToAnalyze?: File) => {
     const targetFile = fileToAnalyze || file;
@@ -93,7 +208,30 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
               clearInterval(interval);
               clearTimeout(timeout);
               setAnalysisResult(data.bill);
-              setStatus('success');
+              // Check if this is an EOB (workflow_verify_and_dispute) and route to verification flow
+              const workflow = data?.summary?.workflow || data?.bill?.summary?.workflow;
+              const verificationOutput = data?.verificationOutput || data?.bill?.verificationOutput;
+
+              if (workflow === 'workflow_verify_and_dispute') {
+                // Re-entry handling: if user has already submitted verification, route to result state
+                const voType = verificationOutput?.type;
+                const procStatus = data?.verificationProcessingStatus || data?.bill?.verificationProcessingStatus;
+                if (voType === 'all_confirmed') {
+                  setStatus('eob_confirmed');
+                } else if (voType === 'deferred') {
+                  setStatus('eob_deferred');
+                } else if (voType === 'flagged' && procStatus === 'complete') {
+                  setStatus('eob_output');
+                } else if (voType === 'flagged' && procStatus === 'processing') {
+                  setStatus('eob_processing');
+                  const billId = data?.billId || data?.bill?._id || data?.bill?.id;
+                  if (billId) startPolling(billId);
+                } else {
+                  setStatus('eob_verification');
+                }
+              } else {
+                setStatus('success');
+              }
               resolve();
             } else if (data.bill?.status === 'failed') {
               clearInterval(interval);
@@ -142,6 +280,15 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
       contentRef.current?.scrollTo(0, 0);
     }
   }, [status]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopPolling();
+    }
+    return () => {
+      stopPolling();
+    };
+  }, [isOpen]);
 
   const handleDownloadReport = () => {
     if (verdictType === 'non_healthcare' || verdictType === 'timeout') return;
@@ -847,6 +994,135 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                     </div>
                   </div>
                 )}
+
+                {status === 'eob_verification' && analysisResult && (() => {
+                  const questions = analysisResult.verificationQuestions || analysisResult.bill?.verificationQuestions || [];
+                  const lineItems = analysisResult.lineItems || analysisResult.bill?.lineItems || [];
+
+                  return (
+                    <div className="p-8 space-y-6">
+                      <div>
+                        <h3 className="text-2xl font-display font-bold mb-2">Review Your EOB</h3>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Look at each line item and confirm whether it matches what actually happened. Flag anything that looks wrong, missing, or doesn't match what you remember — we'll help you call about it.
+                        </p>
+                      </div>
+
+                      {questions.length === 0 ? (
+                        <div className="p-6 bg-amber-50 border-l-4 border-amber-300 rounded-2xl">
+                          <p className="text-sm text-amber-900">We couldn't generate verification questions for this EOB. Try uploading again or contact support.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {questions.map((q: any, idx: number) => {
+                            const lineItem = lineItems.find((li: any) =>
+                              (li._id?.toString && li._id.toString() === q.lineItemId) ||
+                              `line_${lineItems.indexOf(li)}` === q.lineItemId
+                            );
+                            const answer = verificationAnswers.get(q.id);
+                            return (
+                              <div key={q.id || idx} className="p-5 bg-white border-2 border-gray-100 rounded-2xl">
+                                {lineItem && (
+                                  <div className="text-xs text-gray-500 mb-2 font-bold uppercase tracking-wide">
+                                    {lineItem.description} {lineItem.cptCode ? `(${lineItem.cptCode})` : ''} — {formatMoney(lineItem.amount)}
+                                  </div>
+                                )}
+                                <p className="text-base font-medium text-gray-900 mb-4 leading-relaxed">
+                                  {q.question || q.text || 'Did this line item match what happened?'}
+                                </p>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setAnswerForQuestion(q.id, 'confirmed')}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                                      answer === 'confirmed'
+                                        ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                                        : 'bg-gray-50 text-gray-700 border-2 border-gray-100 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    ✓ Looks right
+                                  </button>
+                                  <button
+                                    onClick={() => setAnswerForQuestion(q.id, 'flagged')}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                                      answer === 'flagged'
+                                        ? 'bg-amber-100 text-amber-800 border-2 border-amber-300'
+                                        : 'bg-gray-50 text-gray-700 border-2 border-gray-100 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    ⚠ Doesn't match
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {verificationError && (
+                        <div className="p-4 bg-red-50 border-l-4 border-red-300 rounded-xl">
+                          <p className="text-sm text-red-800">{verificationError}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {status === 'eob_processing' && (
+                  <div className="p-12 flex flex-col items-center justify-center text-center space-y-6">
+                    <Loader2 className="text-findr animate-spin" size={48} />
+                    <div>
+                      <h3 className="text-xl font-display font-bold mb-2">Building your call script...</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+                        We're putting together the audience to call, the script to use, and what to say if they push back. About 30 seconds.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {status === 'eob_output' && analysisResult?.verificationOutput && (
+                  <div className="p-8 space-y-6">
+                    <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Sparkles className="text-findr" size={20} />
+                        <h3 className="font-display font-bold text-base">Your call script is ready</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        The detailed call script with what to say, who to call, and how to handle pushback will render here once Commit C2 ships. For now, your verification submitted successfully and the LLM has generated your call package.
+                      </p>
+                      <p className="text-xs text-gray-500 mt-4 font-mono break-words">
+                        Audience: {analysisResult.verificationOutput.audience || 'unknown'} • Primary concern: {(analysisResult.verificationOutput.primaryConcern || '').substring(0, 100)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {status === 'eob_confirmed' && analysisResult?.verificationOutput && (
+                  <div className="p-8 space-y-6">
+                    <div className="p-6 bg-green-50 border-l-4 border-green-300 rounded-2xl">
+                      <div className="flex items-center gap-3 mb-3">
+                        <CheckCircle2 className="text-green-700" size={24} />
+                        <h3 className="font-display font-bold text-lg text-green-900">All looks correct</h3>
+                      </div>
+                      <p className="text-sm text-green-800 leading-relaxed">
+                        {analysisResult.verificationOutput.message || "Looks right. We'll be ready when the bill arrives. Save this EOB. When the bill comes, upload it here and we'll cross-check against this."}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {status === 'eob_deferred' && analysisResult?.verificationOutput && (
+                  <div className="p-8 space-y-6">
+                    <div className="p-6 bg-amber-50 border-l-4 border-amber-300 rounded-2xl">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Clock className="text-amber-700" size={24} />
+                        <h3 className="font-display font-bold text-lg text-amber-900">Take your time</h3>
+                      </div>
+                      <p className="text-sm text-amber-800 leading-relaxed">
+                        {analysisResult.verificationOutput.message || "No rush. When you're ready to review your EOB, come back and we'll pick up where we left off."}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Footer Actions */}
@@ -868,6 +1144,31 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   </p>
                 </div>
               )}
+
+              {/* EOB verification sticky action bar */}
+              {status === 'eob_verification' && analysisResult && (() => {
+                const questions = analysisResult.verificationQuestions || analysisResult.bill?.verificationQuestions || [];
+                const flaggedCount = Array.from(verificationAnswers.values()).filter(v => v === 'flagged').length;
+                return (
+                  <div className="border-t border-gray-100 bg-white p-4 flex gap-3 items-center flex-shrink-0">
+                    <button
+                      onClick={() => handleVerificationSubmit(true)}
+                      className="px-5 py-3 text-sm font-bold text-gray-600 hover:text-black transition-colors"
+                    >
+                      Need more time
+                    </button>
+                    <button
+                      onClick={() => handleVerificationSubmit(false)}
+                      disabled={questions.length === 0}
+                      className="flex-1 py-3 bg-black text-white rounded-full font-bold text-sm flex items-center justify-center gap-2 hover:bg-findr transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {flaggedCount === 0
+                        ? 'All looks correct'
+                        : `Submit ${flaggedCount} flagged item${flaggedCount === 1 ? '' : 's'}`}
+                    </button>
+                  </div>
+                );
+              })()}
             </motion.div>
           </div>
         </>
