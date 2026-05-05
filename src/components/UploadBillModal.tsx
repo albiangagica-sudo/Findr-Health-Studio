@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock, Sparkles } from 'lucide-react';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -814,6 +814,26 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                         </div>
                       </div>
                     )}
+
+                    {/* Ask Clarity handoff */}
+                    <div className="p-6 bg-gradient-to-br from-zest/10 to-findr/5 border-2 border-zest/30 rounded-3xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Sparkles className="text-findr" size={20} />
+                        <h4 className="font-display font-bold text-base">Have questions about this bill?</h4>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        Open Clarity to dig into specific charges, prep for your call, or figure out what to do if billing pushes back.
+                      </p>
+                      <button
+                        onClick={() => {
+                          onClose();
+                          window.dispatchEvent(new CustomEvent('open-clarity'));
+                        }}
+                        className="bg-black text-white rounded-full px-6 py-3 font-bold text-sm flex items-center gap-2 hover:bg-findr transition-colors"
+                      >
+                        Ask Clarity <ArrowRight size={16} />
+                      </button>
+                    </div>
 
                     {/* Download Report */}
                     <div>
