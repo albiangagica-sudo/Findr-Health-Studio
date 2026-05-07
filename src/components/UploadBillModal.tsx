@@ -1126,7 +1126,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                               <div key={q.id || idx} className="p-5 bg-white border-2 border-gray-100 rounded-2xl">
                                 {lineItem && (
                                   <div className="text-xs text-gray-500 mb-2 font-bold uppercase tracking-wide">
-                                    {lineItem.description} {lineItem.cptCode ? `(${lineItem.cptCode})` : ''} — {formatMoney(lineItem.amount)}
+                                    {lineItem.description} {lineItem.cptCode ? `(${lineItem.cptCode})` : ''} — {formatMoney(lineItem.billedAmount)}
                                   </div>
                                 )}
                                 <p className="text-base font-medium text-gray-900 mb-4 leading-relaxed">
