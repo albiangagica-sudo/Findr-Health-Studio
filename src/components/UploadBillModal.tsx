@@ -624,6 +624,82 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   );
                 })()}
 
+                {/* What We Found — narrative summary across EOB states */}
+                {analysisResult?.summary &&
+                 ['eob_verification', 'eob_processing', 'eob_output', 'eob_confirmed', 'eob_deferred'].includes(status) && (() => {
+                  const s = analysisResult.summary;
+                  const formatMoneySafe = (n: any) => (typeof n === 'number' && !isNaN(n))
+                    ? `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : null;
+                  const formatDate = (d: string | undefined) => {
+                    if (!d) return null;
+                    try {
+                      return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    } catch { return null; }
+                  };
+
+                  const billed = formatMoneySafe(s.totalBilled);
+                  const insurancePaid = formatMoneySafe(s.insurancePaid);
+                  const adjustment = formatMoneySafe(s.insuranceAdjustment);
+                  const patientOwes = formatMoneySafe(s.patientResponsibility);
+                  const serviceDate = formatDate(s.serviceDate);
+                  const provider = s.providerName;
+
+                  // Build narrative sentences only from fields that exist
+                  const sentences: string[] = [];
+
+                  if (billed) {
+                    const subject = provider ? `${provider} charged` : 'The provider charged';
+                    sentences.push(`${subject} ${billed}.`);
+                  }
+                  if (insurancePaid && adjustment) {
+                    sentences.push(`Insurance covered ${insurancePaid} after a ${adjustment} plan discount.`);
+                  } else if (insurancePaid) {
+                    sentences.push(`Insurance covered ${insurancePaid}.`);
+                  } else if (adjustment) {
+                    sentences.push(`A ${adjustment} plan discount was applied.`);
+                  }
+                  if (patientOwes) {
+                    sentences.push(`After your deductible and coinsurance, you owe ${patientOwes}.`);
+                  }
+
+                  const hasNarrative = sentences.length > 0;
+                  const hasVerdict = typeof s.verdictMessage === 'string' && s.verdictMessage.trim().length > 0;
+                  if (!hasNarrative && !hasVerdict && !provider && !serviceDate) return null;
+
+                  // Verdict label adapts to verdictType
+                  const verdictLabel =
+                    s.verdictType === 'overcharged' ? 'Heads up:' :
+                    s.verdictType === 'fair' ? 'Looks reasonable:' :
+                    'Note:';
+
+                  return (
+                    <div className="mx-8 my-6 p-6 bg-white border-2 border-zest/30 rounded-3xl">
+                      <div className="text-xs font-bold uppercase tracking-widest text-findr mb-3">What We Found</div>
+
+                      {(provider || serviceDate) && (
+                        <div className="text-sm text-gray-600 mb-4 leading-snug">
+                          {provider || ''}{provider && serviceDate ? ' · ' : ''}{serviceDate || ''}
+                        </div>
+                      )}
+
+                      {hasNarrative && (
+                        <p className="text-sm text-gray-800 leading-relaxed">
+                          {sentences.join(' ')}
+                        </p>
+                      )}
+
+                      {hasVerdict && (
+                        <div className={`mt-4 ${hasNarrative ? 'pt-4 border-t border-gray-100' : ''}`}>
+                          <p className="text-sm text-gray-800 leading-relaxed">
+                            <span className="font-bold text-findr">{verdictLabel}</span> {s.verdictMessage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {status === 'idle' && (
                   <>
                   <div className="bg-amber-50 border-l-4 border-amber-300 px-5 py-4 rounded-2xl mb-6">
