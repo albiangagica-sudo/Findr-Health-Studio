@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import LineItemBreakdownCard from './LineItemBreakdownCard';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -700,6 +701,15 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                   );
                 })()}
 
+                {/* Line item breakdown — EOB states, but not while pricing is still processing */}
+                {['eob_verification', 'eob_output', 'eob_confirmed', 'eob_deferred'].includes(status) && (
+                  <div className="mx-8 my-6">
+                    <LineItemBreakdownCard
+                      lineItems={analysisResult?.lineItems || analysisResult?.bill?.lineItems || []}
+                    />
+                  </div>
+                )}
+
                 {status === 'idle' && (
                   <>
                   <div className="bg-amber-50 border-l-4 border-amber-300 px-5 py-4 rounded-2xl mb-6">
@@ -1060,47 +1070,7 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       </div>
                     </div>
 
-                    {/* Line items */}
-                    {analysisResult.lineItems?.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-display font-bold mb-4">Charges Breakdown</h4>
-                        <div className="space-y-3">
-                          {analysisResult.lineItems.map((item: any, i: number) => {
-                            const style = ASSESSMENT_STYLES[item.analysis?.assessment] || ASSESSMENT_STYLES.fair;
-                            return (
-                              <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <div className="flex items-start justify-between gap-3 mb-2">
-                                  <div>
-                                    <p className="font-bold text-sm">
-                                      {item.description}
-                                      {item.cptCode && <span className="text-gray-400 font-medium ml-1">({item.cptCode})</span>}
-                                    </p>
-                                  </div>
-                                  <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-black uppercase ${style.bg} ${style.text}`}>
-                                    {style.label}
-                                  </span>
-                                </div>
-                                <div className="flex gap-6 text-sm">
-                                  <div>
-                                    <span className="text-gray-400">Billed: </span>
-                                    <span className="font-bold">{formatMoney(item.billedAmount)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-400">Fair: </span>
-                                    <span className="font-bold">
-                                      {formatMoney(item.referencePricing?.fairPriceRange?.low)} — {formatMoney(item.referencePricing?.fairPriceRange?.high)}
-                                    </span>
-                                  </div>
-                                </div>
-                                {item.analysis?.reasoning && (
-                                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">{item.analysis.reasoning}</p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    <LineItemBreakdownCard lineItems={analysisResult.lineItems || []} />
 
                     {/* Explanation */}
                     {analysisResult.explanation && (
