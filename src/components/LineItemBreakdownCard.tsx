@@ -88,8 +88,7 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
             additionalAmounts.length > 0 ||
             hasFairRange ||
             (hasReasoning && !isFlagged) ||
-            medicareMultiplier != null ||
-            negotiationOpening != null;
+            (negotiationOpening != null && isFlagged);
 
           const isExpanded = expandedIndices.has(i);
 
@@ -171,9 +170,6 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Fair price range</p>
                       <p className="text-xs">
                         <span className="font-medium">{formatMoney(fairLow)} — {formatMoney(fairHigh)}</span>
-                        {medicareMultiplier != null && (
-                          <span className="text-gray-500 ml-2">({medicareMultiplier.toFixed(1)}x Medicare rate)</span>
-                        )}
                       </p>
                     </div>
                   )}
@@ -185,13 +181,13 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
                     </div>
                   )}
 
-                  {negotiationOpening != null && (
+                  {negotiationOpening != null && isFlagged && (
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Negotiation</p>
                       <p className="text-xs text-gray-600">
-                        Suggested opening: <span className="font-medium">{formatMoney(negotiationOpening)}</span>
+                        Open with <span className="font-medium">{formatMoney(negotiationOpening)}</span>
                         {item.negotiationGuidance?.discountRange && (
-                          <span className="text-gray-500"> · {item.negotiationGuidance.discountRange} discount range</span>
+                          <span className="text-gray-500"> · {item.negotiationGuidance.discountRange} off the billed amount</span>
                         )}
                       </p>
                     </div>
