@@ -22,6 +22,12 @@ type LineItem = {
     discountRange?: string;
     strategy?: string;
   };
+  cptTranslation?: {
+    plainName?: string;
+    patientExperience?: string;
+    typicalTime?: string | null;
+    validationQuestion?: string;
+  } | null;
 };
 
 type Props = {
@@ -85,6 +91,8 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
           const negotiationOpening = item.negotiationGuidance?.suggestedRange?.opening;
 
           const hasExpandContent =
+            !!item.cptTranslation?.patientExperience ||
+            !!item.cptTranslation?.typicalTime ||
             additionalAmounts.length > 0 ||
             hasFairRange ||
             (hasReasoning && !isFlagged) ||
@@ -111,11 +119,20 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0">
                   <p className="font-bold text-sm">
-                    {item.description || 'Service'}
-                    {item.cptCode && (
-                      <span className="text-gray-400 font-medium ml-1">({item.cptCode})</span>
-                    )}
+                    {item.cptTranslation?.plainName || item.description || 'Service'}
                   </p>
+                  {item.cptTranslation?.plainName && (item.description || item.cptCode) && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {item.description}
+                      {item.description && item.cptCode && <span className="mx-1">·</span>}
+                      {item.cptCode && <span className="font-mono">{item.cptCode}</span>}
+                    </p>
+                  )}
+                  {!item.cptTranslation?.plainName && item.cptCode && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      <span className="font-mono">{item.cptCode}</span>
+                    </p>
+                  )}
                 </div>
                 {verdictStyle && (
                   <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-black uppercase ${verdictStyle.bg} ${verdictStyle.text}`}>
@@ -151,6 +168,20 @@ export default function LineItemBreakdownCard({ lineItems }: Props) {
 
               {isExpanded && (
                 <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                  {item.cptTranslation?.patientExperience && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">What this typically involves</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{item.cptTranslation.patientExperience}</p>
+                    </div>
+                  )}
+
+                  {item.cptTranslation?.typicalTime && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Time</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{item.cptTranslation.typicalTime}</p>
+                    </div>
+                  )}
+
                   {additionalAmounts.length > 0 && (
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Breakdown</p>
