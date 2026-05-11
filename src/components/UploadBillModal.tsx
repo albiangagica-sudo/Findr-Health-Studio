@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, Loader2, Zap, Copy, Check, Download, Clock, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import LineItemBreakdownCard from './LineItemBreakdownCard';
+import AppropriatenessFlagsCard from './AppropriatenessFlagsCard';
 
 const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
 
@@ -704,6 +705,10 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                 {/* Line item breakdown — EOB states, but not while pricing is still processing */}
                 {['eob_verification', 'eob_output', 'eob_confirmed', 'eob_deferred'].includes(status) && (
                   <div className="mx-8 my-6">
+                    <AppropriatenessFlagsCard
+                      flags={analysisResult?.appropriatenessFlags || analysisResult?.bill?.appropriatenessFlags}
+                      lineItems={analysisResult?.lineItems || analysisResult?.bill?.lineItems}
+                    />
                     <LineItemBreakdownCard
                       lineItems={analysisResult?.lineItems || analysisResult?.bill?.lineItems || []}
                     />
@@ -1070,6 +1075,10 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
                       </div>
                     </div>
 
+                    <AppropriatenessFlagsCard
+                      flags={analysisResult?.appropriatenessFlags}
+                      lineItems={analysisResult?.lineItems}
+                    />
                     <LineItemBreakdownCard lineItems={analysisResult.lineItems || []} />
 
                     {/* Explanation */}
