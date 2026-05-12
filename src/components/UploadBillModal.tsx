@@ -4,7 +4,7 @@ import { X, Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft, 
 import LineItemBreakdownCard from './LineItemBreakdownCard';
 import AppropriatenessFlagsCard from './AppropriatenessFlagsCard';
 
-const API_BASE = 'https://fearless-achievement-production.up.railway.app/api/clarity-price';
+const API_BASE = `${import.meta.env.VITE_FINDR_API_BASE_URL ?? 'https://fearless-achievement-production.up.railway.app'}/api/clarity-price`;
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   insurance_eob: 'Insurance Explanation of Benefits',
