@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, X, Send, MessageSquare, ArrowRight } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-const CLARITY_API_URL = 'https://fearless-achievement-production.up.railway.app/api/clarity/chat';
+const CLARITY_API_URL = `${import.meta.env.VITE_FINDR_API_BASE_URL ?? 'https://fearless-achievement-production.up.railway.app'}/api/clarity/chat`;
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string };
 
