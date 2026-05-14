@@ -5,6 +5,9 @@ import LineItemBreakdownCard from './LineItemBreakdownCard';
 import AppropriatenessFlagsCard from './AppropriatenessFlagsCard';
 
 const API_BASE = `${import.meta.env.VITE_FINDR_API_BASE_URL ?? 'https://fearless-achievement-production.up.railway.app'}/api/clarity-price`;
+const PRESIGN_ENDPOINT = import.meta.env.VITE_PRESIGN_ENDPOINT as string | undefined;
+const ALLOWED_MIME_PATTERN = /^(image\/(jpeg|png|gif|webp|heic)|application\/pdf)$/;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   insurance_eob: 'Insurance Explanation of Benefits',
@@ -202,22 +205,59 @@ export default function UploadBillModal({ isOpen, onClose, initialFile, onFileCo
     setStatus('uploading');
 
     try {
-      const headers = { 'x-user-id': 'anonymous' };
-
-      const formData = new FormData();
-      formData.append('image', targetFile);
-
-      const uploadRes = await fetch(`${API_BASE}/analyze`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error(`Upload failed with status ${uploadRes.status}`);
+      // ── Client-side validation (fail fast before any network calls) ──
+      if (!targetFile.type || !ALLOWED_MIME_PATTERN.test(targetFile.type)) {
+        throw new Error('Unsupported file type. Please upload JPG, PNG, GIF, WebP, HEIC, or PDF.');
+      }
+      if (targetFile.size > MAX_FILE_SIZE_BYTES) {
+        throw new Error('File too large. Maximum 10MB.');
+      }
+      if (!PRESIGN_ENDPOINT) {
+        console.error('[Upload] VITE_PRESIGN_ENDPOINT not configured at build time');
+        throw new Error('Upload not configured. Please contact support.');
       }
 
-      const { billId } = await uploadRes.json();
+      // ── Stage 1/3: request presigned URL ──
+      console.log(`[Upload] Stage 1/3: requesting presigned URL for ${targetFile.type}, ${targetFile.size} bytes`);
+      const presignRes = await fetch(PRESIGN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: targetFile.type, contentLength: targetFile.size }),
+      });
+
+      if (!presignRes.ok) {
+        throw new Error(`[Upload] Stage 1/3 failed: presign returned status ${presignRes.status}`);
+      }
+
+      const { uploadUrl, key } = await presignRes.json();
+
+      // ── Stage 2/3: PUT file bytes directly to S3 ──
+      console.log(`[Upload] Stage 2/3: uploading to S3 (${targetFile.size} bytes)`);
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': targetFile.type },
+        body: targetFile,
+      });
+
+      if (!putRes.ok) {
+        throw new Error(`[Upload] Stage 2/3 failed: S3 PUT returned status ${putRes.status}`);
+      }
+
+      // ── Stage 3/3: request bill analysis with the S3 key ──
+      console.log('[Upload] Stage 3/3: requesting bill analysis');
+      const headers = { 'x-user-id': 'anonymous', 'Content-Type': 'application/json' };
+      const analyzeRes = await fetch(`${API_BASE}/analyze`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ s3Key: key, mimeType: targetFile.type }),
+      });
+
+      if (!analyzeRes.ok) {
+        throw new Error(`[Upload] Stage 3/3 failed: analyze returned status ${analyzeRes.status}`);
+      }
+
+      const { billId } = await analyzeRes.json();
+      console.log(`[Upload] All stages complete, billId: ${billId}`);
       setStatus('analyzing');
 
       await new Promise<void>((resolve, reject) => {
